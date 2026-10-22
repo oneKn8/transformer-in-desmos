@@ -30,3 +30,16 @@ python3 ../../gen_desmos.py ../../out/lm_ref.json
 ```
 
 On https://www.desmos.com/calculator, with the window in front: in the console define `const STATE = ` followed by the contents of `lm_ref.json`, paste `genbench.js`, then `await gbRun(STATE)`. It returns the first-evaluation time, the forward-pass latencies, the generation rate and the logits at load.
+
+## With the attention panel (2026-10-22, 10:10)
+
+The inspector (per-head switches, the window strip, 4 rows of attention bars) measured the same way, tab in front at 60 frames/s, machine idle (load 0.4), interleaved panel / no panel / no panel / panel:
+
+| Graph | First evaluation | Forward pass, median of 5 | Generation |
+|---|---|---|---|
+| with panel | 590 ms | 152 ms | 6.26 chars/s |
+| without panel | 375 ms | 137 ms | 5.53 chars/s |
+| without panel | 347 ms | 139 ms | 5.53 chars/s |
+| with panel | 364 ms | 164 ms | 5.26 chars/s |
+
+The panel adds about 15 to 25 ms before the logits update and no measurable cost to the generation rate (the spread between the two panel runs is larger than the difference). These runs are faster than the 4.7 chars/s above because the machine was idle; compare within a table, not across tables.
