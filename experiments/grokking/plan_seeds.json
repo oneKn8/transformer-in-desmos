@@ -1,0 +1,6 @@
+[
+  {"stage": "seeds", "tag": "attn_p31_lr3e-2_wd1_f0.6", "base": {"p": 31, "arch": "attn", "lr": 0.03, "weight_decay": 1.0, "train_frac": 0.6, "max_steps": 2500, "confirm_steps": 100}, "seeds": "0,1,2,3"},
+  {"stage": "seeds", "tag": "attn_p31_lr1e-2_wd1_f0.6", "base": {"p": 31, "arch": "attn", "lr": 0.01, "weight_decay": 1.0, "train_frac": 0.6, "max_steps": 2500, "confirm_steps": 100}, "seeds": "0,1,2,3"},
+  {"stage": "seeds", "tag": "attn_p47_lr1e-2_wd1_f0.6", "base": {"p": 47, "arch": "attn", "lr": 0.01, "weight_decay": 1.0, "train_frac": 0.6, "max_steps": 2500, "confirm_steps": 100}, "seeds": "0,1,2"},
+  {"stage": "seeds", "tag": "mlp_concat_p31_m128_lr1e-2_wd3_f0.75", "base": {"p": 31, "arch": "mlp_concat", "d_mlp": 128, "lr": 0.01, "weight_decay": 3.0, "train_frac": 0.75, "max_steps": 2500, "confirm_steps": 100}, "seeds": "0,1,2"}
+]

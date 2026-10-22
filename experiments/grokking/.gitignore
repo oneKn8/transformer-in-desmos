@@ -1,0 +1,4 @@
+# raw run logs carry local paths in warnings; the results are in the jsonl, md and png files
+results/log_*.txt
+__pycache__/
+.ruff_cache/

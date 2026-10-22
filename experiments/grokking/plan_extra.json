@@ -1,0 +1,4 @@
+[
+  {"stage": "sgd_weak_decay", "base": {"p": 31, "train_frac": 0.6}, "seeds": "0"},
+  {"stage": "attn_shape", "tag": "lr3e-2_wd1", "base": {"p": 31, "lr": 0.03, "weight_decay": 1.0, "train_frac": 0.6}, "seeds": "0"}
+]

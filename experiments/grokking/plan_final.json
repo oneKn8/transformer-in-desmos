@@ -1,0 +1,4 @@
+[
+  {"stage": "seeds", "tag": "attn_p23_lr3e-2_wd1_f0.75", "base": {"p": 23, "arch": "attn", "lr": 0.03, "weight_decay": 1.0, "train_frac": 0.75, "max_steps": 2500, "confirm_steps": 100}, "seeds": "0,1,2,3"},
+  {"stage": "seeds", "tag": "attn_p31_m32_lr3e-2_wd1_f0.6", "base": {"p": 31, "arch": "attn", "d_mlp": 32, "lr": 0.03, "weight_decay": 1.0, "train_frac": 0.6, "max_steps": 2500, "confirm_steps": 100}, "seeds": "0,1,2,3"}
+]

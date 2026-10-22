@@ -1,0 +1,5 @@
+[
+  {"stage": "seeds", "tag": "attn_p59_lr1e-2_wd1_f0.3", "base": {"p": 59, "arch": "attn", "lr": 0.01, "weight_decay": 1.0, "train_frac": 0.3, "max_steps": 2500, "confirm_steps": 100}, "seeds": "0"},
+  {"stage": "seeds", "tag": "attn_p97_lr1e-2_wd1_f0.3", "base": {"p": 97, "arch": "attn", "lr": 0.01, "weight_decay": 1.0, "train_frac": 0.3, "max_steps": 2500, "confirm_steps": 100}, "seeds": "0"},
+  {"stage": "seeds", "tag": "attn_p113_lr1e-2_wd1_f0.3", "base": {"p": 113, "arch": "attn", "lr": 0.01, "weight_decay": 1.0, "train_frac": 0.3, "max_steps": 2500, "confirm_steps": 100}, "seeds": "0"}
+]

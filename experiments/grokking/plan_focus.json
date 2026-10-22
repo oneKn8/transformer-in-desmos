@@ -1,0 +1,8 @@
+[
+  {"stage": "attn_focus", "base": {}, "seeds": "0"},
+  {"stage": "attn_shape", "base": {"p": 31, "lr": 0.01, "weight_decay": 3.0, "train_frac": 0.6}, "seeds": "0"},
+  {"stage": "seeds", "tag": "attn_p31_lr1e-2_wd3_f0.6", "base": {"p": 31, "arch": "attn", "lr": 0.01, "weight_decay": 3.0, "train_frac": 0.6, "max_steps": 2500, "confirm_steps": 100}, "seeds": "0,1,2"},
+  {"stage": "mlp_search", "base": {"p": 31, "lr": 0.01, "weight_decay": 3.0}, "seeds": "0"},
+  {"stage": "optim", "base": {"p": 31, "lr": 0.01, "weight_decay": 3.0, "train_frac": 0.6}, "seeds": "0"},
+  {"stage": "minibatch", "base": {"p": 31, "arch": "attn", "lr": 0.01, "weight_decay": 3.0, "train_frac": 0.6}, "seeds": "0"}
+]
