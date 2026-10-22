@@ -1,0 +1,135 @@
+{
+  "done": [
+    {
+      "name": "shk_d64_L1_H2_T32",
+      "model": {
+        "vocab_size": 32,
+        "ctx": 32,
+        "d_model": 64,
+        "n_layer": 1,
+        "n_head": 2,
+        "mlp_mult": 4,
+        "norm": "rms",
+        "act": "gelu_tanh",
+        "tied": false,
+        "bias": false,
+        "pos": "learned",
+        "norm_eps": 1e-05
+      },
+      "train": {
+        "vocab": "s32",
+        "max_steps": 1000,
+        "tokens_per_step": 4096,
+        "lr": 0.01,
+        "min_lr_frac": 0.1,
+        "warmup_steps": 100,
+        "weight_decay": 0.01,
+        "grad_clip": 1.0,
+        "eval_every": 250,
+        "eval_windows": 256,
+        "patience": 5,
+        "min_delta": 0.001,
+        "seed": 0
+      },
+      "params": 55488,
+      "steps": 1000,
+      "best_step": 1000,
+      "tokens_seen": 4096000,
+      "train_wall_seconds": 236.3,
+      "train_cpu_seconds": 166.6,
+      "early_stopped": false,
+      "val_bpc_all": 2.5551,
+      "val_bpc_ctx": 2.4975,
+      "test_bpc_all": 2.6188,
+      "test_bpc_ctx": 2.5621,
+      "sample_prompt": "romeo:\n",
+      "sample": "romeo:\no shall it know murdering vices ned head head,\nand that sun your severy, you sight this havest,\nand i unworld, this do, my und my from by wherefore accusinfering hereis rometh:\nhere for that be fair l",
+      "cost": {
+        "full": {
+          "mode": "full",
+          "padded_blocks": 54,
+          "mac_blocks": 52.062,
+          "elements": 28928,
+          "ms_padded": 149.1,
+          "ms_mac": 146.6
+        },
+        "kv": {
+          "mode": "kv",
+          "padded_blocks": 54,
+          "mac_blocks": 1.688,
+          "elements": 5248,
+          "ms_padded": 125.4,
+          "ms_mac": 57.4
+        }
+      }
+    },
+    {
+      "name": "shk_d32_L4_H2_T32",
+      "model": {
+        "vocab_size": 32,
+        "ctx": 32,
+        "d_model": 32,
+        "n_layer": 4,
+        "n_head": 2,
+        "mlp_mult": 4,
+        "norm": "rms",
+        "act": "gelu_tanh",
+        "tied": false,
+        "bias": false,
+        "pos": "learned",
+        "norm_eps": 1e-05
+      },
+      "train": {
+        "vocab": "s32",
+        "max_steps": 1000,
+        "tokens_per_step": 4096,
+        "lr": 0.02,
+        "min_lr_frac": 0.1,
+        "warmup_steps": 100,
+        "weight_decay": 0.01,
+        "grad_clip": 1.0,
+        "eval_every": 250,
+        "eval_windows": 256,
+        "patience": 5,
+        "min_delta": 0.001,
+        "seed": 0
+      },
+      "params": 52512,
+      "steps": 1000,
+      "best_step": 1000,
+      "tokens_seen": 4096000,
+      "train_wall_seconds": 355.8,
+      "train_cpu_seconds": 249.6,
+      "early_stopped": false,
+      "val_bpc_all": 2.4884,
+      "val_bpc_ctx": 2.4104,
+      "test_bpc_all": 2.5985,
+      "test_bpc_ctx": 2.5287,
+      "sample_prompt": "romeo:\n",
+      "sample": "romeo:\nif you revenge threasign ive mid\nhaut anchied have beady your: if in desconderieven,\nin him stuppparlant.\n\nmarcius:\ni come, and your for away if will lear from,\nbe it spray the hate for to so the vist",
+      "cost": {
+        "full": {
+          "mode": "full",
+          "padded_blocks": 65,
+          "mac_blocks": 56.031,
+          "elements": 83136,
+          "ms_padded": 217.6,
+          "ms_mac": 206.0
+        },
+        "kv": {
+          "mode": "kv",
+          "padded_blocks": 65,
+          "mac_blocks": 1.781,
+          "elements": 10976,
+          "ms_padded": 145.5,
+          "ms_mac": 63.3
+        }
+      }
+    }
+  ],
+  "not_run": [],
+  "claimed_elsewhere": [
+    "shk_d64_L2_H2_T32"
+  ],
+  "failed": []
+}

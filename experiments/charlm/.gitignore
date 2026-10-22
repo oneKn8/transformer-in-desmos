@@ -1,0 +1,10 @@
+# Corpus text is regenerable (corpus.py) or downloadable (see README); not committed.
+data/*.txt
+data/tinyshakespeare/
+# per-run checkpoints and logs: regenerable with run_grid.py
+runs/
+# unfolded copy of the weights, derivable from best/model.pt
+best/weights_trained.npz
+.ruff_cache/
+__pycache__/
+data/gutenberg/

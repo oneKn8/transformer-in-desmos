@@ -1,0 +1,79 @@
+{
+  "corpora": {
+    "homer": "Homer, Odyssey (PG #1727) + Iliad (PG #2199), Samuel Butler prose translations",
+    "shakespeare": "tiny-shakespeare, https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt, sha256 86c4e6aa9db7c042ec79f339dcb96d42b0075e16b8fc2e86bf0ca57e2dc565ed"
+  },
+  "source_chars": {
+    "homer": 1417166,
+    "shakespeare": 1115394
+  },
+  "source_distinct_chars": {
+    "homer": 78,
+    "shakespeare": 65
+  },
+  "vocabs": {
+    "v32": {
+      "corpus": "homer",
+      "symbols": " abcdefghijklmnopqrstuvwxyz.,;'\"",
+      "size": 32,
+      "mapped_chars": 1417032,
+      "sha256": "003f92dc85f4115d3f57b50b5ce8dbd36bf4f52a1f64790f60d9e9fe90050d19",
+      "counts": {
+        "exact": 1382797,
+        "case_folded": 26633,
+        "quote_normalized": 4759,
+        "remapped": 2952,
+        "dropped": 25
+      },
+      "pct": {
+        "exact": 97.5748,
+        "case_folded": 1.8793,
+        "quote_normalized": 0.3358,
+        "remapped": 0.2083,
+        "dropped": 0.0018
+      }
+    },
+    "v64": {
+      "corpus": "homer",
+      "symbols": " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,;:?!'\"-()",
+      "size": 64,
+      "mapped_chars": 1417132,
+      "sha256": "b6759c1ef67cab8c70128ec9a22271d76ab96ad71cafa5c80bf083655fa7139c",
+      "counts": {
+        "exact": 1411434,
+        "case_folded": 0,
+        "quote_normalized": 4759,
+        "remapped": 948,
+        "dropped": 25
+      },
+      "pct": {
+        "exact": 99.5955,
+        "case_folded": 0.0,
+        "quote_normalized": 0.3358,
+        "remapped": 0.0669,
+        "dropped": 0.0018
+      }
+    },
+    "s32": {
+      "corpus": "shakespeare",
+      "symbols": " \nabcdefghijklmnopqrstuvwxyz,:.'",
+      "size": 32,
+      "mapped_chars": 1114625,
+      "sha256": "f3267c2a5c0cd68b2062b46dec7dd5d029cd82b5bc2a2b1925fac3dfae83c762",
+      "counts": {
+        "exact": 1016450,
+        "case_folded": 88754,
+        "quote_normalized": 0,
+        "remapped": 10159,
+        "dropped": 31
+      },
+      "pct": {
+        "exact": 91.1292,
+        "case_folded": 7.9572,
+        "quote_normalized": 0.0,
+        "remapped": 0.9108,
+        "dropped": 0.0028
+      }
+    }
+  }
+}

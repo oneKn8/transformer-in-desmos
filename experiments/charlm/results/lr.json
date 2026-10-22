@@ -1,0 +1,317 @@
+[
+  {
+    "name": "lr1e-3_d32_L2_H4_T32",
+    "model": {
+      "vocab_size": 32,
+      "ctx": 32,
+      "d_model": 32,
+      "n_layer": 2,
+      "n_head": 4,
+      "mlp_mult": 4,
+      "norm": "rms",
+      "act": "gelu_tanh",
+      "tied": false,
+      "bias": false,
+      "pos": "learned",
+      "norm_eps": 1e-05
+    },
+    "train": {
+      "vocab": "v32",
+      "max_steps": 1000,
+      "tokens_per_step": 4096,
+      "lr": 0.001,
+      "min_lr_frac": 0.1,
+      "warmup_steps": 100,
+      "weight_decay": 0.01,
+      "grad_clip": 1.0,
+      "eval_every": 250,
+      "eval_windows": 256,
+      "patience": 5,
+      "min_delta": 0.001,
+      "seed": 0
+    },
+    "params": 27808,
+    "steps": 1000,
+    "best_step": 1000,
+    "tokens_seen": 4096000,
+    "train_wall_seconds": 196.8,
+    "train_cpu_seconds": 134.5,
+    "early_stopped": false,
+    "val_bpc_all": 2.7129,
+    "val_bpc_ctx": 2.6777,
+    "test_bpc_all": 2.7051,
+    "test_bpc_ctx": 2.6712,
+    "sample_prompt": "then minerva said, ",
+    "sample": "then minerva said, met. shis went in in she her steareve bed seaid, ars went of son, th sas arve you the i is to was broy in thow ulerd seent will a astirs of on greetar ans grod, con itt sull beais, to to creacke by bo",
+    "cost": {
+      "full": {
+        "mode": "full",
+        "padded_blocks": 41,
+        "mac_blocks": 28.031,
+        "elements": 54464,
+        "ms_padded": 157.8,
+        "ms_mac": 140.9
+      },
+      "kv": {
+        "mode": "kv",
+        "padded_blocks": 41,
+        "mac_blocks": 0.906,
+        "elements": 5984,
+        "ms_padded": 109.3,
+        "ms_mac": 57.2
+      }
+    }
+  },
+  {
+    "name": "lr3e-3_d32_L2_H4_T32",
+    "model": {
+      "vocab_size": 32,
+      "ctx": 32,
+      "d_model": 32,
+      "n_layer": 2,
+      "n_head": 4,
+      "mlp_mult": 4,
+      "norm": "rms",
+      "act": "gelu_tanh",
+      "tied": false,
+      "bias": false,
+      "pos": "learned",
+      "norm_eps": 1e-05
+    },
+    "train": {
+      "vocab": "v32",
+      "max_steps": 1000,
+      "tokens_per_step": 4096,
+      "lr": 0.003,
+      "min_lr_frac": 0.1,
+      "warmup_steps": 100,
+      "weight_decay": 0.01,
+      "grad_clip": 1.0,
+      "eval_every": 250,
+      "eval_windows": 256,
+      "patience": 5,
+      "min_delta": 0.001,
+      "seed": 0
+    },
+    "params": 27808,
+    "steps": 1000,
+    "best_step": 1000,
+    "tokens_seen": 4096000,
+    "train_wall_seconds": 173.7,
+    "train_cpu_seconds": 123.7,
+    "early_stopped": false,
+    "val_bpc_all": 2.441,
+    "val_bpc_ctx": 2.3951,
+    "test_bpc_all": 2.4286,
+    "test_bpc_ctx": 2.3815,
+    "sample_prompt": "then minerva said, ",
+    "sample": "then minerva said, and don whelf the sonse a we steareve bed seely ward went of son, thest broves heat,\" i is to was broy in thow his deses. for the as grong the ground the he hort. for the agre the achaeat beging upon ",
+    "cost": {
+      "full": {
+        "mode": "full",
+        "padded_blocks": 41,
+        "mac_blocks": 28.031,
+        "elements": 54464,
+        "ms_padded": 157.8,
+        "ms_mac": 140.9
+      },
+      "kv": {
+        "mode": "kv",
+        "padded_blocks": 41,
+        "mac_blocks": 0.906,
+        "elements": 5984,
+        "ms_padded": 109.3,
+        "ms_mac": 57.2
+      }
+    }
+  },
+  {
+    "name": "lr1e-2_d32_L2_H4_T32",
+    "model": {
+      "vocab_size": 32,
+      "ctx": 32,
+      "d_model": 32,
+      "n_layer": 2,
+      "n_head": 4,
+      "mlp_mult": 4,
+      "norm": "rms",
+      "act": "gelu_tanh",
+      "tied": false,
+      "bias": false,
+      "pos": "learned",
+      "norm_eps": 1e-05
+    },
+    "train": {
+      "vocab": "v32",
+      "max_steps": 1000,
+      "tokens_per_step": 4096,
+      "lr": 0.01,
+      "min_lr_frac": 0.1,
+      "warmup_steps": 100,
+      "weight_decay": 0.01,
+      "grad_clip": 1.0,
+      "eval_every": 250,
+      "eval_windows": 256,
+      "patience": 5,
+      "min_delta": 0.001,
+      "seed": 0
+    },
+    "params": 27808,
+    "steps": 1000,
+    "best_step": 1000,
+    "tokens_seen": 4096000,
+    "train_wall_seconds": 176.2,
+    "train_cpu_seconds": 121.4,
+    "early_stopped": false,
+    "val_bpc_all": 2.249,
+    "val_bpc_ctx": 2.1865,
+    "test_bpc_all": 2.2497,
+    "test_bpc_ctx": 2.1837,
+    "sample_prompt": "then minerva said, ",
+    "sample": "then minerva said, \"the ships who in in should and a every dister, which end he sun, threfore with was,\" i were upon brod not you has destrat will had the son of got had answered, and it his much as anginot began glarin",
+    "cost": {
+      "full": {
+        "mode": "full",
+        "padded_blocks": 41,
+        "mac_blocks": 28.031,
+        "elements": 54464,
+        "ms_padded": 157.8,
+        "ms_mac": 140.9
+      },
+      "kv": {
+        "mode": "kv",
+        "padded_blocks": 41,
+        "mac_blocks": 0.906,
+        "elements": 5984,
+        "ms_padded": 109.3,
+        "ms_mac": 57.2
+      }
+    }
+  },
+  {
+    "name": "lr3e-3_d64_L2_H4_T32",
+    "model": {
+      "vocab_size": 32,
+      "ctx": 32,
+      "d_model": 64,
+      "n_layer": 2,
+      "n_head": 4,
+      "mlp_mult": 4,
+      "norm": "rms",
+      "act": "gelu_tanh",
+      "tied": false,
+      "bias": false,
+      "pos": "learned",
+      "norm_eps": 1e-05
+    },
+    "train": {
+      "vocab": "v32",
+      "max_steps": 1000,
+      "tokens_per_step": 4096,
+      "lr": 0.003,
+      "min_lr_frac": 0.1,
+      "warmup_steps": 100,
+      "weight_decay": 0.01,
+      "grad_clip": 1.0,
+      "eval_every": 250,
+      "eval_windows": 256,
+      "patience": 5,
+      "min_delta": 0.001,
+      "seed": 0
+    },
+    "params": 104768,
+    "steps": 1000,
+    "best_step": 1000,
+    "tokens_seen": 4096000,
+    "train_wall_seconds": 427.2,
+    "train_cpu_seconds": 272.5,
+    "early_stopped": false,
+    "val_bpc_all": 2.1651,
+    "val_bpc_ctx": 2.0882,
+    "test_bpc_all": 2.1648,
+    "test_bpc_ctx": 2.0852,
+    "sample_prompt": "then minerva said, ",
+    "sample": "then minerva said, \"men ships who said as they helen every disner, which ent; for your feating from and jove who was brad in they had deed at within a like off still had answered, \"i side sungue them to looked the by br",
+    "cost": {
+      "full": {
+        "mode": "full",
+        "padded_blocks": 114,
+        "mac_blocks": 104.062,
+        "elements": 84224,
+        "ms_padded": 282.4,
+        "ms_mac": 269.5
+      },
+      "kv": {
+        "mode": "kv",
+        "padded_blocks": 114,
+        "mac_blocks": 3.312,
+        "elements": 11072,
+        "ms_padded": 209.3,
+        "ms_mac": 65.4
+      }
+    }
+  },
+  {
+    "name": "lr1e-2_d64_L2_H4_T32",
+    "model": {
+      "vocab_size": 32,
+      "ctx": 32,
+      "d_model": 64,
+      "n_layer": 2,
+      "n_head": 4,
+      "mlp_mult": 4,
+      "norm": "rms",
+      "act": "gelu_tanh",
+      "tied": false,
+      "bias": false,
+      "pos": "learned",
+      "norm_eps": 1e-05
+    },
+    "train": {
+      "vocab": "v32",
+      "max_steps": 1000,
+      "tokens_per_step": 4096,
+      "lr": 0.01,
+      "min_lr_frac": 0.1,
+      "warmup_steps": 100,
+      "weight_decay": 0.01,
+      "grad_clip": 1.0,
+      "eval_every": 250,
+      "eval_windows": 256,
+      "patience": 5,
+      "min_delta": 0.001,
+      "seed": 0
+    },
+    "params": 104768,
+    "steps": 1000,
+    "best_step": 1000,
+    "tokens_seen": 4096000,
+    "train_wall_seconds": 460.8,
+    "train_cpu_seconds": 274.5,
+    "early_stopped": false,
+    "val_bpc_all": 2.1046,
+    "val_bpc_ctx": 2.0286,
+    "test_bpc_all": 2.0989,
+    "test_bpc_ctx": 2.0194,
+    "sample_prompt": "then minerva said, ",
+    "sample": "then minerva said, \"my done wall that has care and afe i wed seent warriends; for your feasirped you the son off their her of the hourder, and serva as the bed still had answered, and it wine, but seat they were tolder ",
+    "cost": {
+      "full": {
+        "mode": "full",
+        "padded_blocks": 114,
+        "mac_blocks": 104.062,
+        "elements": 84224,
+        "ms_padded": 282.4,
+        "ms_mac": 269.5
+      },
+      "kv": {
+        "mode": "kv",
+        "padded_blocks": 114,
+        "mac_blocks": 3.312,
+        "elements": 11072,
+        "ms_padded": 209.3,
+        "ms_mac": 65.4
+      }
+    }
+  }
+]

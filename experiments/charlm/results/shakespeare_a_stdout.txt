@@ -1,0 +1,6 @@
+| run | params | steps | val bpc (all) | val bpc (ctx>=T/2) | ms/token full (padded / mac) | ms/token kv (padded / mac) |
+|---|---|---|---|---|---|---|
+| shk_d64_L2_H2_T32 | 104768 | 1000 | 2.428 | 2.358 | 243 / 241 | 198 / 64 |
+| shk_d64_L1_H2_T32 | 55488 | 1000 | 2.555 | 2.498 | 149 / 147 | 125 / 57 |
+CLAIMED ELSEWHERE (other launcher or stale claim): ['shk_d32_L4_H2_T32']
+exit 0

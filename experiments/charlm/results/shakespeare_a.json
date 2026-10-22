@@ -1,0 +1,135 @@
+{
+  "done": [
+    {
+      "name": "shk_d64_L2_H2_T32",
+      "model": {
+        "vocab_size": 32,
+        "ctx": 32,
+        "d_model": 64,
+        "n_layer": 2,
+        "n_head": 2,
+        "mlp_mult": 4,
+        "norm": "rms",
+        "act": "gelu_tanh",
+        "tied": false,
+        "bias": false,
+        "pos": "learned",
+        "norm_eps": 1e-05
+      },
+      "train": {
+        "vocab": "s32",
+        "max_steps": 1000,
+        "tokens_per_step": 4096,
+        "lr": 0.01,
+        "min_lr_frac": 0.1,
+        "warmup_steps": 100,
+        "weight_decay": 0.01,
+        "grad_clip": 1.0,
+        "eval_every": 250,
+        "eval_windows": 256,
+        "patience": 5,
+        "min_delta": 0.001,
+        "seed": 0
+      },
+      "params": 104768,
+      "steps": 1000,
+      "best_step": 1000,
+      "tokens_seen": 4096000,
+      "train_wall_seconds": 460.0,
+      "train_cpu_seconds": 308.4,
+      "early_stopped": false,
+      "val_bpc_all": 2.4282,
+      "val_bpc_ctx": 2.3585,
+      "test_bpc_all": 2.5412,
+      "test_bpc_ctx": 2.4711,
+      "sample_prompt": "romeo:\n",
+      "sample": "romeo:\no shall the great him go in this haught chrief,\nbut mades, you make know you sights,\nin himself that a madam uptain, but seem thy frown yearn's good\nyet inferces new is fair apport\nin the as of fair l",
+      "cost": {
+        "full": {
+          "mode": "full",
+          "padded_blocks": 106,
+          "mac_blocks": 104.062,
+          "elements": 55552,
+          "ms_padded": 243.4,
+          "ms_mac": 240.8
+        },
+        "kv": {
+          "mode": "kv",
+          "padded_blocks": 106,
+          "mac_blocks": 3.312,
+          "elements": 10176,
+          "ms_padded": 198.0,
+          "ms_mac": 64.5
+        }
+      }
+    },
+    {
+      "name": "shk_d64_L1_H2_T32",
+      "model": {
+        "vocab_size": 32,
+        "ctx": 32,
+        "d_model": 64,
+        "n_layer": 1,
+        "n_head": 2,
+        "mlp_mult": 4,
+        "norm": "rms",
+        "act": "gelu_tanh",
+        "tied": false,
+        "bias": false,
+        "pos": "learned",
+        "norm_eps": 1e-05
+      },
+      "train": {
+        "vocab": "s32",
+        "max_steps": 1000,
+        "tokens_per_step": 4096,
+        "lr": 0.01,
+        "min_lr_frac": 0.1,
+        "warmup_steps": 100,
+        "weight_decay": 0.01,
+        "grad_clip": 1.0,
+        "eval_every": 250,
+        "eval_windows": 256,
+        "patience": 5,
+        "min_delta": 0.001,
+        "seed": 0
+      },
+      "params": 55488,
+      "steps": 1000,
+      "best_step": 1000,
+      "tokens_seen": 4096000,
+      "train_wall_seconds": 236.3,
+      "train_cpu_seconds": 166.6,
+      "early_stopped": false,
+      "val_bpc_all": 2.5551,
+      "val_bpc_ctx": 2.4975,
+      "test_bpc_all": 2.6188,
+      "test_bpc_ctx": 2.5621,
+      "sample_prompt": "romeo:\n",
+      "sample": "romeo:\no shall it know murdering vices ned head head,\nand that sun your severy, you sight this havest,\nand i unworld, this do, my und my from by wherefore accusinfering hereis rometh:\nhere for that be fair l",
+      "cost": {
+        "full": {
+          "mode": "full",
+          "padded_blocks": 54,
+          "mac_blocks": 52.062,
+          "elements": 28928,
+          "ms_padded": 149.1,
+          "ms_mac": 146.6
+        },
+        "kv": {
+          "mode": "kv",
+          "padded_blocks": 54,
+          "mac_blocks": 1.688,
+          "elements": 5248,
+          "ms_padded": 125.4,
+          "ms_mac": 57.4
+        }
+      }
+    }
+  ],
+  "not_run": [],
+  "claimed_elsewhere": [
+    "shk_d32_L4_H2_T32"
+  ],
+  "failed": []
+}

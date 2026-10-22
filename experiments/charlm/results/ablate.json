@@ -1,0 +1,511 @@
+{
+  "done": [
+    {
+      "name": "d64_L2_H2_T32_norm-ln",
+      "model": {
+        "vocab_size": 32,
+        "ctx": 32,
+        "d_model": 64,
+        "n_layer": 2,
+        "n_head": 2,
+        "mlp_mult": 4,
+        "norm": "ln",
+        "act": "gelu_tanh",
+        "tied": false,
+        "bias": false,
+        "pos": "learned",
+        "norm_eps": 1e-05
+      },
+      "train": {
+        "vocab": "v32",
+        "max_steps": 1000,
+        "tokens_per_step": 4096,
+        "lr": 0.01,
+        "min_lr_frac": 0.1,
+        "warmup_steps": 100,
+        "weight_decay": 0.01,
+        "grad_clip": 1.0,
+        "eval_every": 250,
+        "eval_windows": 256,
+        "patience": 5,
+        "min_delta": 0.001,
+        "seed": 0
+      },
+      "params": 105088,
+      "steps": 1000,
+      "best_step": 1000,
+      "tokens_seen": 4096000,
+      "train_wall_seconds": 205.6,
+      "train_cpu_seconds": 205.0,
+      "early_stopped": false,
+      "val_bpc_all": 2.1007,
+      "val_bpc_ctx": 2.0312,
+      "test_bpc_all": 2.0846,
+      "test_bpc_ctx": 2.0114,
+      "sample_prompt": "then minerva said, ",
+      "sample": "then minerva said, \"the ships who was gashed were eare is fair fight ranger.\" \"thus, these was from an,\" with his and she would was judomer. i serva a like of their day fars ground. it therefore they come here they were",
+      "cost": {
+        "full": {
+          "mode": "full",
+          "padded_blocks": 106,
+          "mac_blocks": 104.062,
+          "elements": 88448,
+          "ms_padded": 276.2,
+          "ms_mac": 273.7
+        },
+        "kv": {
+          "mode": "kv",
+          "padded_blocks": 106,
+          "mac_blocks": 3.312,
+          "elements": 11328,
+          "ms_padded": 199.1,
+          "ms_mac": 65.6
+        }
+      }
+    },
+    {
+      "name": "d64_L2_H2_T32_norm-none",
+      "model": {
+        "vocab_size": 32,
+        "ctx": 32,
+        "d_model": 64,
+        "n_layer": 2,
+        "n_head": 2,
+        "mlp_mult": 4,
+        "norm": "none",
+        "act": "gelu_tanh",
+        "tied": false,
+        "bias": false,
+        "pos": "learned",
+        "norm_eps": 1e-05
+      },
+      "train": {
+        "vocab": "v32",
+        "max_steps": 1000,
+        "tokens_per_step": 4096,
+        "lr": 0.01,
+        "min_lr_frac": 0.1,
+        "warmup_steps": 100,
+        "weight_decay": 0.01,
+        "grad_clip": 1.0,
+        "eval_every": 250,
+        "eval_windows": 256,
+        "patience": 5,
+        "min_delta": 0.001,
+        "seed": 0
+      },
+      "params": 104448,
+      "steps": 1000,
+      "best_step": 1000,
+      "tokens_seen": 4096000,
+      "train_wall_seconds": 207.2,
+      "train_cpu_seconds": 206.4,
+      "early_stopped": false,
+      "val_bpc_all": 2.235,
+      "val_bpc_ctx": 2.1651,
+      "test_bpc_all": 2.2289,
+      "test_bpc_ctx": 2.157,
+      "sample_prompt": "then minerva said, ",
+      "sample": "then minerva said, \"remachus were said as care and afell bed seeid,\" ranger.\" her she word, and she was plaid them of the would weul fiend at will had like by of gold a made great all for sungue answay another they were",
+      "cost": {
+        "full": {
+          "mode": "full",
+          "padded_blocks": 106,
+          "mac_blocks": 104.062,
+          "elements": 55424,
+          "ms_padded": 243.2,
+          "ms_mac": 240.7
+        },
+        "kv": {
+          "mode": "kv",
+          "padded_blocks": 106,
+          "mac_blocks": 3.312,
+          "elements": 10048,
+          "ms_padded": 197.8,
+          "ms_mac": 64.4
+        }
+      }
+    },
+    {
+      "name": "d64_L2_H2_T32_act-relu",
+      "model": {
+        "vocab_size": 32,
+        "ctx": 32,
+        "d_model": 64,
+        "n_layer": 2,
+        "n_head": 2,
+        "mlp_mult": 4,
+        "norm": "rms",
+        "act": "relu",
+        "tied": false,
+        "bias": false,
+        "pos": "learned",
+        "norm_eps": 1e-05
+      },
+      "train": {
+        "vocab": "v32",
+        "max_steps": 1000,
+        "tokens_per_step": 4096,
+        "lr": 0.01,
+        "min_lr_frac": 0.1,
+        "warmup_steps": 100,
+        "weight_decay": 0.01,
+        "grad_clip": 1.0,
+        "eval_every": 250,
+        "eval_windows": 256,
+        "patience": 5,
+        "min_delta": 0.001,
+        "seed": 0
+      },
+      "params": 104768,
+      "steps": 1000,
+      "best_step": 1000,
+      "tokens_seen": 4096000,
+      "train_wall_seconds": 186.2,
+      "train_cpu_seconds": 185.1,
+      "early_stopped": false,
+      "val_bpc_all": 2.0906,
+      "val_bpc_ctx": 2.0139,
+      "test_bpc_all": 2.0825,
+      "test_bpc_ctx": 2.0037,
+      "sample_prompt": "then minerva said, ",
+      "sample": "then minerva said, \"the ships who was answered and are i wears and ward went of all, those was from and jove who was broy when it ulysses, and serva as you bed stood had answered, and waters, upon seat they beggarius, m",
+      "cost": {
+        "full": {
+          "mode": "full",
+          "padded_blocks": 106,
+          "mac_blocks": 104.062,
+          "elements": 55552,
+          "ms_padded": 243.4,
+          "ms_mac": 240.8
+        },
+        "kv": {
+          "mode": "kv",
+          "padded_blocks": 106,
+          "mac_blocks": 3.312,
+          "elements": 10176,
+          "ms_padded": 198.0,
+          "ms_mac": 64.5
+        }
+      }
+    },
+    {
+      "name": "d64_L2_H2_T32_tied",
+      "model": {
+        "vocab_size": 32,
+        "ctx": 32,
+        "d_model": 64,
+        "n_layer": 2,
+        "n_head": 2,
+        "mlp_mult": 4,
+        "norm": "rms",
+        "act": "gelu_tanh",
+        "tied": true,
+        "bias": false,
+        "pos": "learned",
+        "norm_eps": 1e-05
+      },
+      "train": {
+        "vocab": "v32",
+        "max_steps": 1000,
+        "tokens_per_step": 4096,
+        "lr": 0.01,
+        "min_lr_frac": 0.1,
+        "warmup_steps": 100,
+        "weight_decay": 0.01,
+        "grad_clip": 1.0,
+        "eval_every": 250,
+        "eval_windows": 256,
+        "patience": 5,
+        "min_delta": 0.001,
+        "seed": 0
+      },
+      "params": 102720,
+      "steps": 1000,
+      "best_step": 1000,
+      "tokens_seen": 4096000,
+      "train_wall_seconds": 230.7,
+      "train_cpu_seconds": 229.5,
+      "early_stopped": false,
+      "val_bpc_all": 2.1144,
+      "val_bpc_ctx": 2.0398,
+      "test_bpc_all": 2.1058,
+      "test_bpc_ctx": 2.029,
+      "sample_prompt": "then minerva said, ",
+      "sample": "then minerva said, \"the ships who in in shoulders earever have give mist entrong; your leaving from and jove who was broken against judged at will have ground off her a far again, and it wine upon seat the crew attle bo",
+      "cost": {
+        "full": {
+          "mode": "full",
+          "padded_blocks": 106,
+          "mac_blocks": 104.062,
+          "elements": 55552,
+          "ms_padded": 243.4,
+          "ms_mac": 240.8
+        },
+        "kv": {
+          "mode": "kv",
+          "padded_blocks": 106,
+          "mac_blocks": 3.312,
+          "elements": 10176,
+          "ms_padded": 198.0,
+          "ms_mac": 64.5
+        }
+      }
+    },
+    {
+      "name": "d64_L2_H2_T32_bias",
+      "model": {
+        "vocab_size": 32,
+        "ctx": 32,
+        "d_model": 64,
+        "n_layer": 2,
+        "n_head": 2,
+        "mlp_mult": 4,
+        "norm": "rms",
+        "act": "gelu_tanh",
+        "tied": false,
+        "bias": true,
+        "pos": "learned",
+        "norm_eps": 1e-05
+      },
+      "train": {
+        "vocab": "v32",
+        "max_steps": 1000,
+        "tokens_per_step": 4096,
+        "lr": 0.01,
+        "min_lr_frac": 0.1,
+        "warmup_steps": 100,
+        "weight_decay": 0.01,
+        "grad_clip": 1.0,
+        "eval_every": 250,
+        "eval_windows": 256,
+        "patience": 5,
+        "min_delta": 0.001,
+        "seed": 0
+      },
+      "params": 105952,
+      "steps": 1000,
+      "best_step": 1000,
+      "tokens_seen": 4096000,
+      "train_wall_seconds": 269.9,
+      "train_cpu_seconds": 269.1,
+      "early_stopped": false,
+      "val_bpc_all": 2.0979,
+      "val_bpc_ctx": 2.0251,
+      "test_bpc_all": 2.0851,
+      "test_bpc_ctx": 2.0088,
+      "sample_prompt": "then minerva said, ",
+      "sample": "then minerva said, \"mychonour why sharges, and and afell bed seeing are went of all, so said tell he the spited, who have not toward fierce and bring still before her a far again, and water against day they beggargues t",
+      "cost": {
+        "full": {
+          "mode": "full",
+          "padded_blocks": 106,
+          "mac_blocks": 104.062,
+          "elements": 92448,
+          "ms_padded": 280.2,
+          "ms_mac": 277.7
+        },
+        "kv": {
+          "mode": "kv",
+          "padded_blocks": 106,
+          "mac_blocks": 3.312,
+          "elements": 11360,
+          "ms_padded": 199.2,
+          "ms_mac": 65.7
+        }
+      }
+    },
+    {
+      "name": "d64_L2_H2_T32_pos-alibi",
+      "model": {
+        "vocab_size": 32,
+        "ctx": 32,
+        "d_model": 64,
+        "n_layer": 2,
+        "n_head": 2,
+        "mlp_mult": 4,
+        "norm": "rms",
+        "act": "gelu_tanh",
+        "tied": false,
+        "bias": false,
+        "pos": "alibi",
+        "norm_eps": 1e-05
+      },
+      "train": {
+        "vocab": "v32",
+        "max_steps": 1000,
+        "tokens_per_step": 4096,
+        "lr": 0.01,
+        "min_lr_frac": 0.1,
+        "warmup_steps": 100,
+        "weight_decay": 0.01,
+        "grad_clip": 1.0,
+        "eval_every": 250,
+        "eval_windows": 256,
+        "patience": 5,
+        "min_delta": 0.001,
+        "seed": 0
+      },
+      "params": 102720,
+      "steps": 1000,
+      "best_step": 1000,
+      "tokens_seen": 4096000,
+      "train_wall_seconds": 228.9,
+      "train_cpu_seconds": 226.7,
+      "early_stopped": false,
+      "val_bpc_all": 2.3541,
+      "val_bpc_ctx": 2.3268,
+      "test_bpc_all": 2.3444,
+      "test_bpc_ctx": 2.3149,
+      "sample_prompt": "then minerva said, ",
+      "sample": "then minerva said, \"the ships who savings of were eave i bed seaid, and went of sunter feath ounty wath jove with a wither had gods judes, and seen applias ond sto the day she speack to the agut the achaeans, who glas m",
+      "cost": {
+        "full": {
+          "mode": "full",
+          "padded_blocks": 106,
+          "mac_blocks": 104.062,
+          "elements": 55552,
+          "ms_padded": 243.4,
+          "ms_mac": 240.8
+        },
+        "kv": {
+          "mode": "kv",
+          "padded_blocks": 106,
+          "mac_blocks": 3.312,
+          "elements": 10176,
+          "ms_padded": 198.0,
+          "ms_mac": 64.5
+        }
+      }
+    },
+    {
+      "name": "d64_L2_H2_T32_v64",
+      "model": {
+        "vocab_size": 64,
+        "ctx": 32,
+        "d_model": 64,
+        "n_layer": 2,
+        "n_head": 2,
+        "mlp_mult": 4,
+        "norm": "rms",
+        "act": "gelu_tanh",
+        "tied": false,
+        "bias": false,
+        "pos": "learned",
+        "norm_eps": 1e-05
+      },
+      "train": {
+        "vocab": "v64",
+        "max_steps": 1000,
+        "tokens_per_step": 4096,
+        "lr": 0.01,
+        "min_lr_frac": 0.1,
+        "warmup_steps": 100,
+        "weight_decay": 0.01,
+        "grad_clip": 1.0,
+        "eval_every": 250,
+        "eval_windows": 256,
+        "patience": 5,
+        "min_delta": 0.001,
+        "seed": 0
+      },
+      "params": 108864,
+      "steps": 1000,
+      "best_step": 1000,
+      "tokens_seen": 4096000,
+      "train_wall_seconds": 429.4,
+      "train_cpu_seconds": 275.6,
+      "early_stopped": false,
+      "val_bpc_all": 2.1369,
+      "val_bpc_ctx": 2.0599,
+      "test_bpc_all": 2.1151,
+      "test_bpc_ctx": 2.0355,
+      "sample_prompt": "Then Minerva said, ",
+      "sample": "Then Minerva said, \"the when Pheleus, but youre, that and you will him he cloide, whether Medam, so of the hearther's beging on the son the dors of Atreus, beat like all return, the is began and the best gods, and he Al",
+      "cost": {
+        "full": {
+          "mode": "full",
+          "padded_blocks": 108,
+          "mac_blocks": 104.125,
+          "elements": 55680,
+          "ms_padded": 246.1,
+          "ms_mac": 241.0
+        },
+        "kv": {
+          "mode": "kv",
+          "padded_blocks": 108,
+          "mac_blocks": 3.375,
+          "elements": 10304,
+          "ms_padded": 200.7,
+          "ms_mac": 64.7
+        }
+      }
+    },
+    {
+      "name": "d64_L2_H2_T32_seed1",
+      "model": {
+        "vocab_size": 32,
+        "ctx": 32,
+        "d_model": 64,
+        "n_layer": 2,
+        "n_head": 2,
+        "mlp_mult": 4,
+        "norm": "rms",
+        "act": "gelu_tanh",
+        "tied": false,
+        "bias": false,
+        "pos": "learned",
+        "norm_eps": 1e-05
+      },
+      "train": {
+        "vocab": "v32",
+        "max_steps": 1000,
+        "tokens_per_step": 4096,
+        "lr": 0.01,
+        "min_lr_frac": 0.1,
+        "warmup_steps": 100,
+        "weight_decay": 0.01,
+        "grad_clip": 1.0,
+        "eval_every": 250,
+        "eval_windows": 256,
+        "patience": 5,
+        "min_delta": 0.001,
+        "seed": 1
+      },
+      "params": 104768,
+      "steps": 1000,
+      "best_step": 1000,
+      "tokens_seen": 4096000,
+      "train_wall_seconds": 418.4,
+      "train_cpu_seconds": 278.1,
+      "early_stopped": false,
+      "val_bpc_all": 2.0802,
+      "val_bpc_ctx": 2.0056,
+      "test_bpc_all": 2.0728,
+      "test_bpc_ctx": 1.993,
+      "sample_prompt": "then minerva said, ",
+      "sample": "then minerva said, \"i can at one and to helm the achaeans field housed amber my mons; i hear back to beyond like the son of dispose from at about the up into the sea, and sea torm all the shield talk sold, and to these ",
+      "cost": {
+        "full": {
+          "mode": "full",
+          "padded_blocks": 106,
+          "mac_blocks": 104.062,
+          "elements": 55552,
+          "ms_padded": 243.4,
+          "ms_mac": 240.8
+        },
+        "kv": {
+          "mode": "kv",
+          "padded_blocks": 106,
+          "mac_blocks": 3.312,
+          "elements": 10176,
+          "ms_padded": 198.0,
+          "ms_mac": 64.5
+        }
+      }
+    }
+  ],
+  "not_run": [],
+  "claimed_elsewhere": [],
+  "failed": []
+}
