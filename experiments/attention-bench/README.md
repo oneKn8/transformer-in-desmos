@@ -21,6 +21,10 @@ The first check before building a language model in Desmos: can a full causal at
 - **Parser trap.** A comprehension passed directly as a function argument is misparsed (errors such as "Points are written like this" or "Cannot combine a matrix and a number"). Wrap each comprehension in its own small function and pass that.
 - **Speed.** One 32x32 by 32x32 multiply costs about 1.3 ms (about 25 M multiply-adds per second). The big cost is display: every matrix shown in the expression list is re-rendered on every update, about 100 ms or more for a few 32x32 matrices, even unchanged ones. Hide intermediates inside functions, keep matrices in lists (lists of matrices are never rendered), and collapse the expression list.
 - **Loading.** `Calc.setExpressions` silently drops `colorLatex` (per-item colors); `Calc.setState` keeps it. In a state file, slider ranges go under `slider`, not `sliderBounds`.
+- **Actions cannot write big matrices.** An action may update a matrix of at most 9x9 ("Cannot update a variable to a matrix larger than 9×9."), and cannot update a list of matrices. Flat number lists can be written (tested up to 10,000 numbers). Anything that has to change over time, such as weights being trained, lives in flat lists and is reshaped into 32x32 matrices when used.
+- **Desmos differentiates through matrix math.** `F(w)=(wNN)[1;1]` gives the correct `F'(2)`, and so does a 2x2 matrix product with `w` inside it. Hide such functions: a visible one-variable function with matrices inside gets plotted point by point and froze the evaluator for about 30 s in our test.
+- **Weights load as literals.** A list of 64 literal 32x32 matrices (65,536 numbers, 627 KB of LaTeX) in one expression parsed and evaluated in about 2 s, so a model of that size fits in a single weight expression.
+- **More indexing.** `M[;[1...8]]` takes columns 1 to 8 (one attention head's slice). Block matrices built from slices work while the result stays within 32x32.
 
 ## Files
 
