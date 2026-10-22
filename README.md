@@ -2,7 +2,11 @@
 
 A character-level transformer that runs entirely inside the Desmos graphing calculator. You type a prompt on a keyboard drawn in the graph, press go, and it writes one character per tick. Every multiply, softmax and normalization is a Desmos expression; Python only trains the model offline, writes the expressions, and checks the numbers.
 
-Status: works (2026-10-22). Live graph: https://www.desmos.com/calculator/yy7jpv4xd3 ("LM: Homer in a calculator"). Open it, collapse the expression list, and click "go / stop". The saved graph predates the 4x speed-up below; `gen_desmos.py` builds the fast version.
+Status: works (2026-10-22). Live graphs (open one, collapse the expression list, click "go / stop"):
+
+- https://www.desmos.com/calculator/cymoybusyq ("LM: Homer in a calculator, heads exposed"): the text generator, 4x faster, with the attention panel and head switches.
+- https://www.desmos.com/calculator/itatkskgam ("LM: a transformer learns to add, inside a calculator"): the training graph that groks (a + b) mod 31, with the formula panel and the ablation buttons.
+- https://www.desmos.com/calculator/yy7jpv4xd3 ("LM: Homer in a calculator"): the first version of the text generator, kept as it was.
 
 ## Where it stands
 

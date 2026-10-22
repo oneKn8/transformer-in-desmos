@@ -306,13 +306,13 @@ def views() -> list:
              color="#cccccc", fillOpacity="0", lineWidth="1"),
         # readout and control
         expr("run", r"r_{n}=0"),
-        expr("bgo", f"\\left({HIST_X}+{HIST_W}-6,{HIST_Y}+{HIST_H}+3\\right)", color="#c74440", pointSize="0", pointOpacity="1",
+        expr("bgo", f"\\left({CIRC_X}-14,{HIST_Y}+{HIST_H}+3\\right)", color="#c74440", pointSize="0", pointOpacity="1",
              label="go / stop", showLabel=True, labelOrientation="right",
              clickableInfo={"enabled": True, "latex": r"r_{n}\to1-r_{n}"}),
         # the readout, rounded so it fits above the circle
         hid("oa", r"o_{a}=\operatorname{round}\left(a_{r},3\right)"), hid("oe", r"o_{e}=\operatorname{round}\left(a_{e},3\right)"),
         hid("ok", r"o_{k}=\operatorname{round}\left(k_{h},3\right)"), hid("of", r"o_{f}=\operatorname{round}\left(r_{f},3\right)"),
-        expr("rd", f"\\left({CIRC_X}-14,{HIST_Y}+{HIST_H}+3\\right)", color="#000000", pointSize="0", pointOpacity="1",
+        expr("rd", f"\\left({CIRC_X}-6,{HIST_Y}+{HIST_H}+3\\right)", color="#000000", pointSize="0", pointOpacity="1",
              label="step ${t_{s}}    train ${o_{a}}    held-out ${o_{e}}    Fourier share ${o_{k}}    formula R² ${o_{f}}", showLabel=True,
              labelOrientation="right"),
     ]
@@ -371,7 +371,7 @@ def formula(pair: tuple[int, int]) -> list:
              label="pair a = ${f_{i}}, b = ${f_{j}} (click a grid cell to change it): dots = the network's 31 logits over c, green = the answer c = a + b mod 31"),
         expr("ft2", f"\\left({FORM_X},{FORM_Y - FORM_H - 2}\\right)", color="#e07b1a", pointSize="0", pointOpacity="1", showLabel=True, labelOrientation="right",
              label="curve = ${f_{a1}} cos(2π·${f_{k1}}(a+b−c)/31) + ${f_{a2}} cos(2π·${f_{k2}}(a+b−c)/31) + ${f_{a3}} cos(2π·${f_{k3}}(a+b−c)/31)"
-                   "   fitted to all 961 pairs, it explains R² = ${r_{f}} of the logits"),
+                   "   fitted to all 961 pairs, it explains R² = ${o_{f}} of the logits"),
     ]
 
 
@@ -402,7 +402,7 @@ def ablation() -> list:
         expr("zrd", f"\\left({GRID_X},{GRID_Y}-32.6\\right)", color="#000000", pointSize="0", pointOpacity="1", showLabel=True,
              labelOrientation="right", label="this grid: train ${o_{v}}   held-out ${o_{w}}"),
     ]
-    for n, (name, x) in enumerate(zip(ABLATION_VIEWS, (0, 8.5, 16))):
+    for n, (name, x) in enumerate(zip(ABLATION_VIEWS, (0, 11, 22))):
         ex.append(expr(f"zb{n}", f"\\left({GRID_X + x},{GRID_Y}+1.2\\right)", pointSize="0", pointOpacity="1",
                        colorLatex=f"\\left\\{{z_{{m}}={n}:\\operatorname{{rgb}}\\left(224,123,26\\right),\\operatorname{{rgb}}\\left(130,130,130\\right)\\right\\}}",
                        label=name, showLabel=True, labelOrientation="right",
@@ -425,8 +425,12 @@ def build(npz: dict, lr: float, wd: float) -> dict:
     train = np.zeros((P, P), dtype=bool)
     train[pairs[:, 0], pairs[:, 1]] = True
     ex = [{"type": "text", "id": "note", "text": (
+        "First collapse this list (the << button at its top right): with it open every training step "
+        "redraws the weight lists and the layout gets squeezed. Then click go / stop. "
         "A one-layer transformer learning (a + b) mod 31 inside Desmos: forward pass, hand-written "
-        "backward pass and AdamW, one step per tick.")}]
+        "backward pass and AdamW, one step per tick. It memorizes, sits on a plateau, then generalizes "
+        "(groks) around step 590. The orange curve is the formula sum of a_k cos(2 pi k (a+b-c)/31) fitted "
+        "to the network every step; the buttons above the grid remove or keep only those waves.")}]
     ex += state_lists(init) + helpers() + constants(train) + params() + forward() + backward()
     ex += flat_grads() + optimizer(lr, wd) + views() + formula(first_held_out(train)) + ablation()
     for e in ex:

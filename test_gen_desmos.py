@@ -131,6 +131,7 @@ def test_head_switches_scale_each_head_and_captions_use_measured_stats():
         for j in (1, 2):
             assert ex[f"z{li}{j}"]["latex"] == f"z_{{{li}{j}}}=1"            # on by default: the model is unchanged
             assert ex[f"hc{li}{j}"]["clickableInfo"]["latex"] == f"z_{{{li}{j}}}\\to1-z_{{{li}{j}}}"
-    assert ex["hc02"]["label"] == "layer 1, head 2: 69% on 1 back, 15% on 2 back, 23% on spaces; without it 4.856 bits/char (all heads: 1.779)"
+    assert ex["hc02"]["label"] == "layer 1, head 2: 69% 1 back, 15% 2 back, 23% on spaces · off: 4.86 bits/char"
+    assert ex["pscore"]["label"].startswith("all heads on: 1.78 bits/char")
     plain = {e["id"]: e for e in g.build([20], tiny_weights(), CFG, SYMBOLS)["expressions"]["list"]}
     assert plain["hc02"]["label"] == "layer 1, head 2 (click to switch it off or on)"

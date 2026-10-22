@@ -2,6 +2,8 @@
 
 Goal: train the one-layer transformer from [`../grokking/`](../grokking/) on (a + b) mod 31 entirely inside Desmos (forward pass, hand-written backward pass, AdamW, one step per ticker tick) and watch it grok. In numpy this run memorizes the training pairs by step 53, sits at 42% test accuracy, then climbs to 99% by step 1140 while the number-token embeddings arrange themselves on a circle.
 
+Live graph: https://www.desmos.com/calculator/itatkskgam (collapse the expression list, then click "go / stop"; it groks around step 590, about 10 minutes on a laptop).
+
 ## Result (2026-10-22)
 
 A one-layer transformer trained from scratch inside Desmos grokked (a + b) mod 31: it memorized the training pairs by step 62, sat on a 42% held-out plateau while the Fourier structure of its embeddings kept growing, went through a loss spike at about step 307, formed the Fourier circle by step 383 and reached 99.17% held-out accuracy at step 587 (the numpy reference: 99% at step 590). About 0.5 steps per second in Chrome on a 15 W laptop. Screenshots: `../../evidence/2026-10-22_grok-in-desmos_*.jpg`.

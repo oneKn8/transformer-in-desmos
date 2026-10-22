@@ -255,10 +255,9 @@ def head_caption(li: int, j: int, stats: dict | None) -> str:
     if not stats:
         return f"{name} (click to switch it off or on)"
     h = next(x for x in stats["heads"] if (x["layer"], x["head"]) == (li, j))
-    looks = ", ".join(f"{round(100 * m)}% on {'itself' if d == 0 else f'{d} back'}"
+    looks = ", ".join(f"{round(100 * m)}% {'itself' if d == 0 else f'{d} back'}"
                       for d, m in zip(h["top_distances"][:2], h["top_mass"][:2]))
-    return (f"{name}: {looks}, {round(100 * h['on_space'])}% on spaces; "
-            f"without it {h['val_bpc_without']} bits/char (all heads: {stats['val_bpc']})")
+    return f"{name}: {looks}, {round(100 * h['on_space'])}% on spaces · off: {h['val_bpc_without']:.2f} bits/char"
 
 
 def inspector(symbols: str, n_layer: int, stats: dict | None) -> list:
@@ -267,7 +266,7 @@ def inspector(symbols: str, n_layer: int, stats: dict | None) -> list:
     ex = [
         expr("ptitle", f"\\left({PANEL_X},{STRIP_Y + 2.2}\\right)", color="#000000", pointSize="0", pointOpacity="1",
              showLabel=True, labelOrientation="right",
-             label="inside the model: where each head looks while choosing the next character"),
+             label="where each head looks as it picks the next character; click one to turn it off"),
         hidden("ix", f"i_{{x}}={PANEL_X}+{SLOT_W}\\left(\\left[1...32\\right]-1\\right)+{SLOT_W / 2}"),
         expr("inew", f"\\left(i_{{x}}\\left[n_{{t}}\\right],{STRIP_Y}-0.9\\right)", color="#000000", pointSize="6"),
     ]
@@ -277,7 +276,7 @@ def inspector(symbols: str, n_layer: int, stats: dict | None) -> list:
         ex.append(expr(f"is{i}", f"\\left\\{{I_{{p}}={i + 1}:\\left(i_{{x}},{STRIP_Y}\\right)\\right\\}}", color="#000000",
                        label=sym, showLabel=True, labelOrientation="center", pointOpacity="1", pointSize="0"))
     for n, (li, j) in enumerate((li, j) for li in range(n_layer) for j in range(2)):
-        top, base = -3 - 7 * n, -9.5 - 7 * n
+        top, base = -3 - 7.8 * n, -10.3 - 7.8 * n     # caption, then bars up to 5.5 tall, then a gap
         z, q, color = f"z_{{{li}{j + 1}}}", f"q_{{a{li}{j + 1}}}", HEAD_COLORS[n % len(HEAD_COLORS)]
         shade = f"\\left\\{{{z}=1:\\operatorname{{rgb}}\\left({int(color[1:3], 16)},{int(color[3:5], 16)},{int(color[5:7], 16)}\\right),\\operatorname{{rgb}}\\left(170,170,170\\right)\\right\\}}"
         ex += [
@@ -292,6 +291,10 @@ def inspector(symbols: str, n_layer: int, stats: dict | None) -> list:
                  showLabel=True, labelOrientation="right", label=head_caption(li, j, stats),
                  clickableInfo={"enabled": True, "latex": f"{z}\\to1-{z}"}),
         ]
+    if stats:
+        ex.append(expr("pscore", f"\\left({PANEL_X},{-10.3 - 7.8 * (2 * n_layer - 1) - 1.3}\\right)", color="#555555",
+                       pointSize="0", pointOpacity="1", showLabel=True, labelOrientation="right",
+                       label=f"all heads on: {stats['val_bpc']:.2f} bits/char on held-out text (lower is better)"))
     return ex
 
 
@@ -307,10 +310,12 @@ def build(prompt_ids: list, wt: dict, cfg: dict, symbols: str, random_seed: str 
     ids = ",".join(str(i + 1) for i in prompt_ids)  # Desmos rows are 1-based
     ex = [
         {"type": "text", "id": "note", "text": (
-            "A character-level transformer (2 layers, d_model 64, 2 heads, 105k parameters) running "
+            "First collapse this list (the << button at its top right): it makes generation several "
+            "times faster. A character-level transformer (2 layers, d_model 64, 2 heads, 105k parameters) running "
             "entirely in Desmos; the weights are lists of 32x32 matrices. Type on the keyboard, press "
             "go / stop, and it writes one character per tick. Key shading is the model's probability "
-            "for the next character. T_x is the text, I the last 32 characters the model sees.")},
+            "for the next character. T_x is the text, I the last 32 characters the model sees. The panel on "
+            "the right shows where each attention head looks; click a head's caption to switch it off.")},
         # the whole text so far (written by the keyboard and the generator), and the window the
         # model sees: its last 32 tokens
         expr("Tx", r"T_{x}=\left[" + ids + r"\right]"),
@@ -342,7 +347,7 @@ def build(prompt_ids: list, wt: dict, cfg: dict, symbols: str, random_seed: str 
         "version": 11,
         "randomSeed": random_seed,
         "graph": {"viewport": {"xmin": -2, "xmax": PANEL_X + 32 * SLOT_W + 3,
-                               "ymin": min(bottom, -9.5 - 7 * (2 * n_layer - 1) - 2), "ymax": STRIP_Y + 3.5},
+                               "ymin": min(bottom, -10.3 - 7.8 * (2 * n_layer - 1) - 2.5), "ymax": STRIP_Y + 3.5},
                   "showGrid": False, "showXAxis": False, "showYAxis": False},
         "expressions": {
             "list": ex,
