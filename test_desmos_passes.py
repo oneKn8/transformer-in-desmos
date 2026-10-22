@@ -62,3 +62,9 @@ def test_check_unique_catches_name_and_id_clashes():
     with pytest.raises(ValueError):
         dp.check_unique([ex("x1", "g_{o}=0"), ex("x1", "h_{o}=0")])
     dp.check_unique([ex("x1", "g_{o}=0"), ex("x2", "g_{p}=0")])
+
+
+def test_plotted_equations_define_nothing():
+    assert dp.defined_name(r"y=-50\left\{0\le x\le96\right\}") is None
+    assert dp.defined_name(r"x=2y") is None
+    dp.check_unique([ex("z1", "y=1"), ex("z2", "y=2x")])

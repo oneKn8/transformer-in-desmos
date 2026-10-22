@@ -242,7 +242,7 @@ def optimizer(lr: float, wd: float) -> list:
         assigns += [f"w_{{{key}}}\\to w_{{n{key}}}", f"m_{{{key}}}\\to m_{{n{key}}}", f"v_{{{key}}}\\to v_{{n{key}}}"]
     assigns.append(r"t_{s}\to t_{s}+1")
     # accuracy history, recorded before the step every 10 steps
-    for hist, val in (("h_{t}", "t_{s}"), ("h_{a}", "a_{r}"), ("h_{b}", "a_{e}"), ("h_{k}", "k_{h}")):
+    for hist, val in (("h_{t}", "t_{s}"), ("h_{a}", "a_{r}"), ("h_{b}", "a_{e}"), ("h_{k}", "k_{h}"), ("h_{r}", "r_{f}")):
         assigns.append(f"{hist}\\to\\left\\{{\\operatorname{{mod}}\\left(t_{{s}},10\\right)=0:\\operatorname{{join}}\\left({hist},{val}\\right),{hist}\\right\\}}")
     ex.append(hid("As", r"A_{s}=\left(" + ",".join(assigns) + r"\right)"))
     return ex
@@ -252,6 +252,8 @@ GRID_X, GRID_Y = 0, 0           # pair grid: cell (a, b) at x = b, y = -a
 CIRC_X, CIRC_Y, CIRC_R = 50, -16, 13
 SPEC_X, SPEC_Y = 36, -34        # Fourier spectrum bars
 HIST_X, HIST_Y, HIST_W, HIST_H = 66, -31, 30, 28
+FORM_X, FORM_Y, FORM_W, FORM_H = 0, -43, 96, 5   # formula panel: token c along x, centered logit up
+VIEW_W, VIEW_H = 110, 53                          # whole layout, about the 2:1 of a laptop browser
 
 
 def views() -> list:
@@ -270,7 +272,8 @@ def views() -> list:
                   r"\left\{t_{f}=1:\left\{c_{f}=1:190,110\right\},\left\{c_{f}=1:160,200\right\}\right\},"
                   r"\left\{t_{f}=1:\left\{c_{f}=1:190,110\right\},\left\{c_{f}=1:67,200\right\}\right\}\right)"),
         expr("grid", r"\operatorname{polygon}\left(\left(q_{x}-1,q_{y}\right),\left(q_{x},q_{y}\right),\left(q_{x},q_{y}+1\right),\left(q_{x}-1,q_{y}+1\right)\right)",
-             colorLatex="q_{c}", fillOpacity="1", lines=False),
+             colorLatex="q_{c}", fillOpacity="1", lines=False,
+             clickableInfo={"enabled": True, "latex": r"i_{a}\to-q_{y}\left[\operatorname{index}\right],i_{b}\to q_{x}\left[\operatorname{index}\right]"}),
         # Fourier view: number-token embeddings (rows 1..31 of W_E) against cos / sin of frequency k
         hid("Ck", r"C_{k}=\cos\left(\frac{2\pi a\left(b-1\right)}{31}\right)\operatorname{for}a=\left[1...15\right];b=\left[1...31\right]"),
         hid("Sk", r"S_{k}=\sin\left(\frac{2\pi a\left(b-1\right)}{31}\right)\operatorname{for}a=\left[1...15\right];b=\left[1...31\right]"),
@@ -291,22 +294,83 @@ def views() -> list:
                      r"\operatorname{for}a=\left[1...15\right]", color="#6042a6", fillOpacity="0.6", lines=False),
         # history (state lists written by the step action)
         hid("ht", r"h_{t}=\left[\right]"), hid("ha", r"h_{a}=\left[\right]"),
-        hid("hb", r"h_{b}=\left[\right]"), hid("hk", r"h_{k}=\left[\right]"),
+        hid("hb", r"h_{b}=\left[\right]"), hid("hk", r"h_{k}=\left[\right]"), hid("hr", r"h_{r}=\left[\right]"),
         hid("hs", r"h_{s}=\max\left(\left[200,\max\left(h_{t}\right)\right]\right)"),
         expr("hist_tr", f"\\left({HIST_X}+{HIST_W}\\frac{{h_{{t}}}}{{h_{{s}}}},{HIST_Y}+{HIST_H}h_{{a}}\\right)", color="#888888", pointSize="0", lines=True),
         expr("hist_te", f"\\left({HIST_X}+{HIST_W}\\frac{{h_{{t}}}}{{h_{{s}}}},{HIST_Y}+{HIST_H}h_{{b}}\\right)", color="#2e9e43", pointSize="0", lines=True),
         expr("hist_k", f"\\left({HIST_X}+{HIST_W}\\frac{{h_{{t}}}}{{h_{{s}}}},{HIST_Y}+{HIST_H}h_{{k}}\\right)", color="#6042a6", pointSize="0", lines=True),
+        expr("hist_r", f"\\left({HIST_X}+{HIST_W}\\frac{{h_{{t}}}}{{h_{{s}}}},{HIST_Y}+{HIST_H}h_{{r}}\\right)", color="#e07b1a", pointSize="0", lines=True),
         expr("axes", f"\\operatorname{{polygon}}\\left(\\left({HIST_X},{HIST_Y}\\right),\\left({HIST_X}+{HIST_W},{HIST_Y}\\right),"
                      f"\\left({HIST_X}+{HIST_W},{HIST_Y}+{HIST_H}\\right),\\left({HIST_X},{HIST_Y}+{HIST_H}\\right)\\right)",
              color="#cccccc", fillOpacity="0", lineWidth="1"),
         # readout and control
         expr("run", r"r_{n}=0"),
-        expr("bgo", f"\\left({HIST_X},{HIST_Y}+{HIST_H}+3\\right)", color="#c74440", pointSize="0", pointOpacity="1",
+        expr("bgo", f"\\left({HIST_X}+{HIST_W}-6,{HIST_Y}+{HIST_H}+3\\right)", color="#c74440", pointSize="0", pointOpacity="1",
              label="go / stop", showLabel=True, labelOrientation="right",
              clickableInfo={"enabled": True, "latex": r"r_{n}\to1-r_{n}"}),
-        expr("rd", f"\\left({HIST_X}+10,{HIST_Y}+{HIST_H}+3\\right)", color="#000000", pointSize="0", pointOpacity="1",
-             label="step ${t_{s}}   train ${a_{r}}   held-out ${a_{e}}   Fourier share ${k_{h}}", showLabel=True,
+        # the readout, rounded so it fits above the circle
+        hid("oa", r"o_{a}=\operatorname{round}\left(a_{r},3\right)"), hid("oe", r"o_{e}=\operatorname{round}\left(a_{e},3\right)"),
+        hid("ok", r"o_{k}=\operatorname{round}\left(k_{h},3\right)"), hid("of", r"o_{f}=\operatorname{round}\left(r_{f},3\right)"),
+        expr("rd", f"\\left({CIRC_X}-14,{HIST_Y}+{HIST_H}+3\\right)", color="#000000", pointSize="0", pointOpacity="1",
+             label="step ${t_{s}}    train ${o_{a}}    held-out ${o_{e}}    Fourier share ${o_{k}}    formula R² ${o_{f}}", showLabel=True,
              labelOrientation="right"),
+    ]
+
+
+def first_held_out(train: np.ndarray, start: int = 10) -> tuple[int, int]:
+    """The first held-out pair (a, b) with a, b >= start in row-major order, 1-based like the
+    graph (the formula panel's opening example; a = 0 would make a + b = b, a dull one)."""
+    pairs = [(a, b) for a, b in np.argwhere(~train) if a >= start and b >= start]
+    a, b = pairs[0] if pairs else np.argwhere(~train)[0]
+    return int(a) + 1, int(b) + 1
+
+
+def formula(pair: tuple[int, int]) -> list:
+    """The learned algorithm as a formula. Fit logit(a, b, c) ~ const(a, b) + sum_k alpha_k
+    cos(2 pi k (a + b - c) / 31) over all 961 pairs, k the embedding's three key frequencies
+    (run_ref.formula_fit), and show one pair's 31 logits as dots on top of the fitted wave.
+    The cosine of a + b - c splits into products of cosines and sines of a, b and c, so each
+    alpha_k needs only M G M^T per block, M holding cos and sin of the three frequencies."""
+    wk = r"\frac{2\pi K_{f}\left[\operatorname{mod}\left(r-1,3\right)+1\right]\left(b-1\right)}{31}"
+    at = r"\frac{2\pi w\left(a-1\right)}{31}"
+    xs = f"\\frac{{{FORM_W}}}{{30}}"       # graph units per token along the panel
+    return [
+        hid("Kf", r"K_{f}=\operatorname{sort}\left(\left[1...15\right],-e_{k}\right)\left[1...3\right]"),
+        # rows 1-3: cos of the key frequencies at tokens 0..30; rows 4-6: sin, as cos shifted by pi/2
+        hid("Mf", r"M_{f}=\cos\left(" + wk + r"-\frac{\pi}{2}\left\{r>3:1,0\right\}\right)\operatorname{for}r=\left[1...6\right];b=\left[1...31\right]"),
+        hid("Bf", r"B_{f}=M_{f}G_{l}M_{f}^{T}"),
+        hid("fy", r"f_{y}\left(B,k,w\right)=\operatorname{total}\left(\left[\cos\left(" + at + r"\right)\left(B\left[a\right]\left[k;k\right]+B\left[a\right]\left[k+3;k+3\right]\right)"
+                  r"-\sin\left(" + at + r"\right)\left(B\left[a\right]\left[k+3;k\right]-B\left[a\right]\left[k;k+3\right]\right)" + OVER_A + r"\right]\right)"),
+        # sum over all pairs and c of logit times cos(2 pi k (a + b - c) / 31), per key frequency
+        hid("yf", r"y_{f}=\left[f_{y}\left(B_{f},1,K_{f}\left[1\right]\right),f_{y}\left(B_{f},2,K_{f}\left[2\right]\right),f_{y}\left(B_{f},3,K_{f}\left[3\right]\right)\right]"),
+        # per-pair-centered sum of squares of the logits: sum of squares minus (row sum)^2 / 31
+        hid("Qs", r"Q_{s}=G_{l}O_{n}"),
+        hid("st", r"s_{t}=\operatorname{total}\left(\operatorname{trace}\left(G_{l}G_{l}^{T}\right)\right)-\frac{\operatorname{total}\left(\operatorname{trace}\left(Q_{s}^{T}Q_{s}\right)\right)}{31}"),
+        # each cosine's sum of squares over all pairs and c is 961 x 31 / 2
+        hid("af", r"a_{f}=\frac{y_{f}}{14895.5}"),
+        hid("rf", r"r_{f}=\frac{\operatorname{total}\left(y_{f}^{2}\right)}{14895.5s_{t}}"),
+        # the pair shown (click a grid cell to change it), its centered logits, and the panel scale
+        expr("ia", f"i_{{a}}={pair[0]}"), expr("ib", f"i_{{b}}={pair[1]}"),
+        hid("lp", r"l_{p}=\left[G_{l}\left[i_{a}\right]\left[i_{b};c\right]\operatorname{for}c=\left[1...31\right]\right]"),
+        hid("lc", r"l_{c}=l_{p}-\operatorname{mean}\left(l_{p}\right)"),
+        hid("cs", r"c_{s}=\operatorname{mod}\left(i_{a}+i_{b}-2,31\right)"),
+        hid("lm", r"l_{m}=\max\left(\left[\max\left(\left|l_{c}\right|\right),\operatorname{total}\left(\left|a_{f}\right|\right),0.001\right]\right)"),
+        expr("fz", f"y={FORM_Y}\\left\\{{{FORM_X}\\le x\\le{FORM_X + FORM_W}\\right\\}}", color="#cccccc", lineWidth="1"),
+        expr("fw", f"y={FORM_Y}+\\frac{{{FORM_H}}}{{l_{{m}}}}\\operatorname{{total}}\\left(a_{{f}}\\cos\\left(\\frac{{2\\pi K_{{f}}\\left(i_{{a}}+i_{{b}}-2-\\frac{{x-{FORM_X}}}{{{xs}}}\\right)}}{{31}}\\right)\\right)"
+                   f"\\left\\{{{FORM_X}\\le x\\le{FORM_X + FORM_W}\\right\\}}", color="#e07b1a", lineWidth="2.5"),
+        expr("fd", f"\\left({FORM_X}+{xs}\\left(\\left[1...31\\right]-1\\right),{FORM_Y}+{FORM_H}\\frac{{l_{{c}}}}{{l_{{m}}}}\\right)", color="#333333", pointSize="7"),
+        expr("fc", f"\\left({FORM_X}+{xs}c_{{s}},{FORM_Y}+{FORM_H}\\frac{{l_{{c}}\\left[c_{{s}}+1\\right]}}{{l_{{m}}}}\\right)", color="#2e9e43", pointSize="13"),
+        expr("fsel", r"\operatorname{polygon}\left(\left(i_{b}-1,-i_{a}\right),\left(i_{b},-i_{a}\right),\left(i_{b},1-i_{a}\right),\left(i_{b}-1,1-i_{a}\right)\right)",
+             color="#e07b1a", fillOpacity="0", lineWidth="3"),
+        # plain scalars for the label (labels interpolate names, not expressions)
+        hid("fi", r"f_{i}=i_{a}-1"), hid("fj", r"f_{j}=i_{b}-1"),
+        *[hid(f"fk{n}", f"f_{{k{n}}}=K_{{f}}\\left[{n}\\right]") for n in (1, 2, 3)],
+        *[hid(f"fa{n}", f"f_{{a{n}}}=\\operatorname{{round}}\\left(a_{{f}}\\left[{n}\\right],2\\right)") for n in (1, 2, 3)],
+        expr("ft", f"\\left({FORM_X},{FORM_Y + FORM_H + 2}\\right)", color="#000000", pointSize="0", pointOpacity="1", showLabel=True, labelOrientation="right",
+             label="pair a = ${f_{i}}, b = ${f_{j}} (click a grid cell to change it): dots = the network's 31 logits over c, green = the answer c = a + b mod 31"),
+        expr("ft2", f"\\left({FORM_X},{FORM_Y - FORM_H - 2}\\right)", color="#e07b1a", pointSize="0", pointOpacity="1", showLabel=True, labelOrientation="right",
+             label="curve = ${f_{a1}} cos(2π·${f_{k1}}(a+b−c)/31) + ${f_{a2}} cos(2π·${f_{k2}}(a+b−c)/31) + ${f_{a3}} cos(2π·${f_{k3}}(a+b−c)/31)"
+                   "   fitted to all 961 pairs, it explains R² = ${r_{f}} of the logits"),
     ]
 
 
@@ -328,7 +392,7 @@ def build(npz: dict, lr: float, wd: float) -> dict:
         "A one-layer transformer learning (a + b) mod 31 inside Desmos: forward pass, hand-written "
         "backward pass and AdamW, one step per tick.")}]
     ex += state_lists(init) + helpers() + constants(train) + params() + forward() + backward()
-    ex += flat_grads() + optimizer(lr, wd) + views()
+    ex += flat_grads() + optimizer(lr, wd) + views() + formula(first_held_out(train))
     for e in ex:
         if "latex" in e:
             e["latex"] = e["latex"].replace("@K@", str(width // 32)).replace("@W@", str(width))
@@ -336,7 +400,7 @@ def build(npz: dict, lr: float, wd: float) -> dict:
     check_unique(ex)
     return {
         "version": 11,
-        "graph": {"viewport": {"xmin": -2, "xmax": HIST_X + HIST_W + 4, "ymin": -37, "ymax": 4},
+        "graph": {"viewport": {"xmin": -2, "xmax": VIEW_W - 2, "ymin": 2 - VIEW_H, "ymax": 2},
                   "showGrid": False, "showXAxis": False, "showYAxis": False},
         "expressions": {
             "list": ex,

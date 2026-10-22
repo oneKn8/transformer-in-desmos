@@ -48,6 +48,26 @@ def key_frequency_share(emb: np.ndarray, top: int = 3) -> float:
     return float(np.sort(per_k)[::-1][:top].sum() / per_k.sum())
 
 
+def top_frequencies(emb: np.ndarray, top: int = 3) -> list:
+    """The `top` strongest Fourier frequencies (1..15) of the number-token embedding, strongest first."""
+    spec = np.abs(np.fft.rfft(emb[: rs.P], axis=0)) ** 2
+    return [int(k) for k in np.argsort(-spec[1:].sum(1), kind="stable")[:top] + 1]
+
+
+def formula_fit(logits: np.ndarray, emb: np.ndarray) -> tuple[list, list, float]:
+    """Fit logit(a, b, c) ~ const(a, b) + sum_k alpha_k cos(2 pi k (a + b - c) / 31) over all
+    961 pairs, k the embedding's three key frequencies. Returns (ks, alphas, R^2), R^2 being the
+    share of the per-pair-centered logit variance the formula explains. The cosines are
+    orthogonal over c, so each alpha_k is a projection."""
+    ks = top_frequencies(emb)
+    a, b, c = np.meshgrid(np.arange(rs.P), np.arange(rs.P), np.arange(rs.P), indexing="ij")
+    y = logits - logits.mean(-1, keepdims=True)
+    feats = [np.cos(2 * np.pi * k * (a + b - c) / rs.P) for k in ks]
+    alphas = [float((y * f).sum() / (f * f).sum()) for f in feats]
+    resid = y - sum(al * f for al, f in zip(alphas, feats))
+    return ks, alphas, float(1 - (resid ** 2).sum() / (y ** 2).sum())
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("out", type=Path)
@@ -75,7 +95,7 @@ def main() -> None:
         loss, dlogits, correct = rs.loss_and_dlogits(f["logits"], grid)
         if step % 10 == 0 or step == args.steps:
             curve.append([step, float(correct[grid.train].mean()), float(correct[test].mean()), loss,
-                          key_frequency_share(w["W_E"])])
+                          key_frequency_share(w["W_E"]), formula_fit(f["logits"], w["W_E"])[2]])
         if step == args.steps:
             break
         rs.adamw(w, rs.backward(w, f, dlogits), m, v, step, args.lr, args.wd)
@@ -86,7 +106,7 @@ def main() -> None:
              **{f"final_{k}": x for k, x in w.items()})
     first99 = next((int(c[0]) for c in curve if c[2] >= 0.99), None)
     print(json.dumps({"steps": args.steps, "seconds": round(secs, 1), "first_test99": first99,
-                      "final": dict(zip(["step", "train", "test", "loss", "key_share"], curve[-1]))}))
+                      "final": dict(zip(["step", "train", "test", "loss", "key_share", "formula_r2"], curve[-1]))}))
 
 
 if __name__ == "__main__":

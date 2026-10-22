@@ -29,10 +29,14 @@ def rename(latex: str, mapping: dict) -> str:
     return TOKEN.sub(swap, latex)
 
 
+# equations Desmos plots rather than definitions: y = f(x), x = g(y), polar r = h(theta)
+PLOTTED = {"x", "y", "r"}
+
+
 def defined_name(latex: str):
     """The variable or function an expression defines, e.g. 'g_{c}' or 'm_{r}', else None."""
     head = latex.split("=", 1)[0] if "=" in latex else ""
-    if not head or "\\to" in head or head.startswith("\\"):
+    if not head or "\\to" in head or head.startswith("\\") or head in PLOTTED:
         return None
     return head.split("\\left(", 1)[0]
 
