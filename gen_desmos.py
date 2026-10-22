@@ -132,7 +132,8 @@ def layer(li: int) -> list:
         hidden(f"e{li}", f"{e}=" + two(lambda j: call("e_{x}", idx(s, j)))),
         hidden(f"z{li}", f"{z}=" + two(lambda j: idx(e, j) + "U")),
         hidden(f"p{li}", f"{pr}=" + two(lambda j: call("p_{d}", idx(e, j), idx(z, j)))),
-        hidden(f"o{li}", f"{o}=" + two(lambda j: idx(pr, j) + idx(v, j))),
+        # head j's output, times its switch z (1 on, 0 off: the head removed exactly)
+        hidden(f"o{li}", f"{o}=" + two(lambda j: f"z_{{{li}{j}}}" + idx(pr, j) + idx(v, j))),
         hidden(f"r{li}", f"{r}=" + two(lambda j: idx(x, j) + "+" + call("p_{j}", o, w["o"], j))),
     ] + rmsnorm(r, d, bb, m, f"2{li}") + [
         hidden(f"h{li}", f"{h}=" + idx(m, 1) + idx(w["u"], "2j-1") + "+" + idx(m, 2) + idx(w["u"], "2j")
@@ -242,7 +243,60 @@ def keyboard(symbols: str) -> list:
     return ex
 
 
-def build(prompt_ids: list, wt: dict, cfg: dict, symbols: str, random_seed: str = DEFAULT_RANDOM_SEED) -> dict:
+PANEL_X = 46                      # inspector panel: where each head looks
+SLOT_W = 1.2                      # graph units per window slot in the panel
+STRIP_Y = -1                      # the window's characters
+HEAD_COLORS = ("#2d70b3", "#388c46", "#c74440", "#6042a6")
+
+
+def head_caption(li: int, j: int, stats: dict | None) -> str:
+    """'layer 1, head 2: ...' with what the head reads and what removing it costs, if measured."""
+    name = f"layer {li + 1}, head {j + 1}"
+    if not stats:
+        return f"{name} (click to switch it off or on)"
+    h = next(x for x in stats["heads"] if (x["layer"], x["head"]) == (li, j))
+    looks = ", ".join(f"{round(100 * m)}% on {'itself' if d == 0 else f'{d} back'}"
+                      for d, m in zip(h["top_distances"][:2], h["top_mass"][:2]))
+    return (f"{name}: {looks}, {round(100 * h['on_space'])}% on spaces; "
+            f"without it {h['val_bpc_without']} bits/char (all heads: {stats['val_bpc']})")
+
+
+def inspector(symbols: str, n_layer: int, stats: dict | None) -> list:
+    """The last 32 characters, and for each head a row of bars: how much attention the newest
+    character pays to each of them. Clicking a head's caption switches the head off or on."""
+    ex = [
+        expr("ptitle", f"\\left({PANEL_X},{STRIP_Y + 2.2}\\right)", color="#000000", pointSize="0", pointOpacity="1",
+             showLabel=True, labelOrientation="right",
+             label="inside the model: where each head looks while choosing the next character"),
+        hidden("ix", f"i_{{x}}={PANEL_X}+{SLOT_W}\\left(\\left[1...32\\right]-1\\right)+{SLOT_W / 2}"),
+        expr("inew", f"\\left(i_{{x}}\\left[n_{{t}}\\right],{STRIP_Y}-0.9\\right)", color="#000000", pointSize="6"),
+    ]
+    for i, sym in enumerate(symbols):
+        if sym == " ":
+            continue
+        ex.append(expr(f"is{i}", f"\\left\\{{I_{{p}}={i + 1}:\\left(i_{{x}},{STRIP_Y}\\right)\\right\\}}", color="#000000",
+                       label=sym, showLabel=True, labelOrientation="center", pointOpacity="1", pointSize="0"))
+    for n, (li, j) in enumerate((li, j) for li in range(n_layer) for j in range(2)):
+        top, base = -3 - 7 * n, -9.5 - 7 * n
+        z, q, color = f"z_{{{li}{j + 1}}}", f"q_{{a{li}{j + 1}}}", HEAD_COLORS[n % len(HEAD_COLORS)]
+        shade = f"\\left\\{{{z}=1:\\operatorname{{rgb}}\\left({int(color[1:3], 16)},{int(color[3:5], 16)},{int(color[5:7], 16)}\\right),\\operatorname{{rgb}}\\left(170,170,170\\right)\\right\\}}"
+        ex += [
+            expr(f"z{li}{j + 1}", f"{z}=1"),
+            # the newest character's attention over the window (row n_t of the head's probabilities)
+            hidden(f"qa{li}{j + 1}", f"{q}=\\left[P_{{{li}}}\\left[{j + 1}\\right]\\left[n_{{t}};k\\right]\\operatorname{{for}}k=\\left[1...32\\right]\\right]"),
+            expr(f"hb{li}{j + 1}", f"\\operatorname{{polygon}}\\left(\\left(i_{{x}}-0.45,{base}\\right),\\left(i_{{x}}+0.45,{base}\\right),"
+                                   f"\\left(i_{{x}}+0.45,{base}+5.5{q}\\right),\\left(i_{{x}}-0.45,{base}+5.5{q}\\right)\\right)",
+                 colorLatex=shade, fillOpacity="0.75", lines=False),
+            expr(f"hl{li}{j + 1}", f"y={base}\\left\\{{{PANEL_X}\\le x\\le{PANEL_X + 32 * SLOT_W}\\right\\}}", color="#cccccc", lineWidth="1"),
+            expr(f"hc{li}{j + 1}", f"\\left({PANEL_X},{top}\\right)", colorLatex=shade, pointSize="0", pointOpacity="1",
+                 showLabel=True, labelOrientation="right", label=head_caption(li, j, stats),
+                 clickableInfo={"enabled": True, "latex": f"{z}\\to1-{z}"}),
+        ]
+    return ex
+
+
+def build(prompt_ids: list, wt: dict, cfg: dict, symbols: str, random_seed: str = DEFAULT_RANDOM_SEED,
+          head_stats: dict | None = None) -> dict:
     n_layer = cfg["n_layer"]
     if not re.fullmatch(r"[0-9a-f]{32}", random_seed):
         raise ValueError(f"random_seed must be 32 lowercase hex digits, got {random_seed!r}")
@@ -279,7 +333,7 @@ def build(prompt_ids: list, wt: dict, cfg: dict, symbols: str, random_seed: str 
         hidden("Y", r"Y=\left[F\left[1\right]W_{y}\left[1\right]+F\left[2\right]W_{y}\left[2\right]\right]"),
         hidden("yl", r"y_{l}=\left[Y\left[1\right]\left[n_{t};b\right]\operatorname{for}b=\left[1...32\right]\right]"),
     ]
-    ex += generation(len(prompt_ids)) + text_display(symbols) + keyboard(symbols)
+    ex += generation(len(prompt_ids)) + text_display(symbols) + keyboard(symbols) + inspector(symbols, n_layer, head_stats)
     ex += weights_exprs(wt, n_layer)
     ex = materialize(ex)
     check_unique(ex)
@@ -287,7 +341,8 @@ def build(prompt_ids: list, wt: dict, cfg: dict, symbols: str, random_seed: str 
     return {
         "version": 11,
         "randomSeed": random_seed,
-        "graph": {"viewport": {"xmin": -2, "xmax": 5 * KEY_COLS + 3, "ymin": bottom, "ymax": 2},
+        "graph": {"viewport": {"xmin": -2, "xmax": PANEL_X + 32 * SLOT_W + 3,
+                               "ymin": min(bottom, -9.5 - 7 * (2 * n_layer - 1) - 2), "ymax": STRIP_Y + 3.5},
                   "showGrid": False, "showXAxis": False, "showYAxis": False},
         "expressions": {
             "list": ex,
@@ -312,7 +367,9 @@ def main() -> None:
     unknown = sorted(set(prompt) - set(symbols))
     if unknown:
         raise ValueError(f"prompt has characters outside the 32-symbol vocab: {unknown}")
-    state = build([symbols.index(c) for c in prompt], wt, cfg, symbols, args.random_seed)
+    stats_path = BEST / "heads.json"  # written by experiments/charlm/head_stats.py
+    head_stats = json.loads(stats_path.read_text()) if stats_path.exists() else None
+    state = build([symbols.index(c) for c in prompt], wt, cfg, symbols, args.random_seed, head_stats)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(state))
     size_kb = args.out.stat().st_size / 1024

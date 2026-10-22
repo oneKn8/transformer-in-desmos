@@ -5,6 +5,7 @@ from __future__ import annotations
 import threadcap  # sets OMP_NUM_THREADS; must be imported before torch
 
 import itertools
+import json
 
 import numpy as np
 import pytest
@@ -12,6 +13,7 @@ import torch
 
 from corpus import S32, V32, V64, decode, encode, extract_iliad, extract_odyssey, load_shakespeare, map_text, split_bounds
 from cost_model import padded_blocks, token_cost
+from head_stats import BEST, without_head
 from model import CharTransformer, ModelConfig, generate
 from reference_numpy import fold_weights, forward, round_sig, trained_weights
 from train import TrainConfig, lr_at
@@ -222,3 +224,21 @@ def test_lr_schedule_warmup_peak_and_floor():
     assert lr_at(1000, tc) == pytest.approx(1e-3)
     with pytest.raises(ValueError, match="max_steps"):
         TrainConfig(max_steps=0)
+
+
+def test_removing_a_head_two_ways_agrees():
+    """head_stats removes a head by zeroing its rows of W_o; zeroing its columns of W_v (no
+    biases in the export) must give the same logits: both make the head's output exactly 0."""
+    cfg = ModelConfig(**json.loads((BEST / "config.json").read_text())["model_config"])
+    with np.load(BEST / "weights.npz") as f:
+        fw = {k: f[k].astype(np.float64) for k in f.files}
+    ids = np.random.default_rng(0).integers(0, cfg.vocab_size, (4, cfg.ctx))
+    for li in range(cfg.n_layer):
+        for j in range(cfg.n_head):
+            alt = dict(fw)
+            wv = fw[f"l{li}_wv"].copy()
+            wv[:, j * cfg.head_dim:(j + 1) * cfg.head_dim] = 0.0
+            alt[f"l{li}_wv"] = wv
+            a, b = forward(without_head(fw, li, j, cfg.head_dim), cfg, ids), forward(alt, cfg, ids)
+            assert np.allclose(a, b, rtol=0, atol=1e-12)
+            assert not np.allclose(a, forward(fw, cfg, ids))   # and the head mattered

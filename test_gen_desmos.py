@@ -119,3 +119,18 @@ def test_random_seed_is_pinned_and_validated():
     assert g.build([1], tiny_weights(), CFG, SYMBOLS, "0" * 32)["randomSeed"] == "0" * 32
     with pytest.raises(ValueError):
         g.build([1], tiny_weights(), CFG, SYMBOLS, "not-a-seed")
+
+
+def test_head_switches_scale_each_head_and_captions_use_measured_stats():
+    stats = {"val_bpc": 1.779, "heads": [
+        {"layer": li, "head": j, "top_distances": [1, 2, 0], "top_mass": [0.693, 0.15, 0.116], "on_space": 0.227, "val_bpc_without": 4.856}
+        for li in range(2) for j in range(2)]}
+    ex = {e["id"]: e for e in g.build([20, 5, 12], tiny_weights(), CFG, SYMBOLS, head_stats=stats)["expressions"]["list"]}
+    assert ex["o1"]["latex"] == r"O_{1}=\left[z_{11}P_{1}\left[1\right]V_{1}\left[1\right],z_{12}P_{1}\left[2\right]V_{1}\left[2\right]\right]"
+    for li in range(2):
+        for j in (1, 2):
+            assert ex[f"z{li}{j}"]["latex"] == f"z_{{{li}{j}}}=1"            # on by default: the model is unchanged
+            assert ex[f"hc{li}{j}"]["clickableInfo"]["latex"] == f"z_{{{li}{j}}}\\to1-z_{{{li}{j}}}"
+    assert ex["hc02"]["label"] == "layer 1, head 2: 69% on 1 back, 15% on 2 back, 23% on spaces; without it 4.856 bits/char (all heads: 1.779)"
+    plain = {e["id"]: e for e in g.build([20], tiny_weights(), CFG, SYMBOLS)["expressions"]["list"]}
+    assert plain["hc02"]["label"] == "layer 1, head 2 (click to switch it off or on)"
