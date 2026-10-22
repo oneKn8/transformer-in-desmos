@@ -11,6 +11,10 @@ The first check before building a language model in Desmos: can a full causal at
 | How fast? | 24 ms per forward pass end to end when fused into hidden functions with the expression list collapsed; about 11 ms of that is compute (40 heads in one update took 466 ms). |
 | Largest matrix? | 32 x 32. Desmos refuses more than 32 rows or 32 columns. |
 
+## Prior work
+
+This benchmark is a feasibility check, not a first. A causal attention block with random weights already exists in Desmos ("Masked Attention", https://www.desmos.com/calculator/0kqb05bq4i, February 2026), and the community graph "All Desmos Features You Should Know" (https://www.desmos.com/calculator/5ls5ggt5gd) documents the 32x32 matrix cap, lists of matrices used as 3D arrays, and the 9x9 limit on matrices written by actions. What this folder adds is the exactness check against numpy, the timing, and the scale test (a list of 1,000 32x32 matrices with batched matmul).
+
 ## What we learned about Desmos matrices (September 2026 release)
 
 - **Size cap 32 x 32.** Error text: "Matrices may not have more than 32 columns." (or rows).
