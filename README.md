@@ -2,7 +2,7 @@
 
 A character-level transformer that runs entirely inside the Desmos graphing calculator. You type a prompt on a keyboard drawn in the graph, press go, and it writes one character per tick. Every multiply, softmax and normalization is a Desmos expression; Python only trains the model offline, writes the expressions, and checks the numbers.
 
-Status: works (2026-10-22). Not yet saved as a public graph.
+Status: works (2026-10-22). Live graph: https://www.desmos.com/calculator/yy7jpv4xd3 ("LM: Homer in a calculator"). Open it, collapse the expression list, and click "go / stop".
 
 ## Where it stands
 
