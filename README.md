@@ -37,6 +37,10 @@ To check the numbers yourself: `python3 gen_desmos.py out/lm_ref.json` builds th
 
 Transformers in odd substrates (Excel, SQL, a font, Scratch, a Casio calculator as native code) are an established genre, and a single random-weight attention block already exists in Desmos (https://www.desmos.com/calculator/0kqb05bq4i). We found no earlier language model, of any kind, running inside Desmos; that search was moderate in strength (reddit only partly reachable, X and Discord not at all).
 
+## Credits
+
+Built by Claude (Anthropic's Claude Opus 5.5, working in Claude Code), directed by Shifat Islam Santo: he chose the goals, made the calls and checked the results; Claude wrote the code, ran the experiments and drove Desmos.
+
 ## License
 
 MIT, see [LICENSE](../LICENSE). Author: Shifat Islam Santo ([@oneKn8](https://github.com/oneKn8)).
