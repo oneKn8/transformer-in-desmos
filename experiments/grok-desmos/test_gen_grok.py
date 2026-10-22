@@ -31,8 +31,25 @@ def test_graph_is_well_formed(width):
     for needed in ("As", "Gl", "Cg", "ge", "nwe", "grid", "circ", "bgo", "rd"):
         assert needed in ids
     assert "A_{s}" in state["expressions"]["ticker"]["handlerLatex"]
-    hd = next(e["latex"] for e in ex if e["id"] == "Hd")
-    assert rf"k=\left[1...{width // 32}\right]" in hd
+    hd_body = next(e["latex"] for e in ex if e["id"] == "mHd")
+    assert rf"k=\left[1...{width // 32}\right]" in hd_body
+
+
+def test_no_comprehension_reads_named_lists_directly():
+    """The materialize pass must leave every comprehension inside a function body, with named
+    values passed in whole (Desmos re-derives lists indexed by comprehensions elsewhere)."""
+    ex = gg.build(fake_npz(32), lr=3e-2, wd=1.0)["expressions"]["list"]
+    defs = set()
+    for e in ex:
+        name = gg.defined_name(e.get("latex") or "")
+        if name and "\\left(" not in e["latex"].split("=", 1)[0]:
+            defs.add(name)
+    for e in ex:
+        latex = e.get("latex") or ""
+        head, _, body = latex.partition("=")
+        if "\\left(" in head or "\\operatorname{for}" not in body:
+            continue
+        assert not [n for n in defs if n in body and n != gg.defined_name(latex)], e["id"]
 
 
 def test_state_lists_hold_the_init_weights_row_major():

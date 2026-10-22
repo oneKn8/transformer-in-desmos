@@ -83,7 +83,7 @@ def helpers() -> list:
         # softmax over the three positions, value for position t, exactly as ref_step
         hid("fsf", r"s_{f}\left(u,v,w,t\right)=\frac{\exp\left(t-\max\left(u,v,w\right)\right)}{\exp\left(u-\max\left(u,v,w\right)\right)"
                    r"+\exp\left(v-\max\left(u,v,w\right)\right)+\exp\left(w-\max\left(u,v,w\right)\right)}"),
-        hid("fzf", r"z_{f}\left(X,Y,W,a\right)=X\left[b;c\right]V_{1}\left[a;c\right]+Y\left[b;c\right]V_{2}\left[b;c\right]+W\left[b;c\right]v_{3}\left[1;c\right]" + FOR_BC),
+        hid("fzf", r"z_{f}\left(X,Y,W,R,S,T\right)=X\left[b;c\right]R\left[1;c\right]+Y\left[b;c\right]S\left[b;c\right]+W\left[b;c\right]T\left[1;c\right]" + FOR_BC),
         hid("fhf", r"h_{f}\left(X,k\right)=\max\left(X\left[b;c\right]+w_{b}\left[32\left(k-1\right)+c\right],0\right)" + FOR_BC),
         hid("fmf", r"m_{f}\left(X\right)=\max\left(\left[X\left[b;c\right]\operatorname{for}c=\left[1...31\right]\right]\right)\operatorname{for}b=\left[1...31\right];j=\left[1\right]"),
         hid("fef", r"e_{f}\left(X,M\right)=\exp\left(X\left[b;c\right]-M\left[b;1\right]\right)" + FOR_BL),
@@ -94,7 +94,7 @@ def helpers() -> list:
         hid("fxr", r"x_{r}\left(X,R\right)=X\left[b;c\right]R\left[1;c\right]" + FOR_BC),
         hid("fyt", r"y_{t}\left(A,F,B,G,C,J\right)=A\left[b;h\right]F\left[b;h\right]+B\left[b;h\right]G\left[b;h\right]+C\left[b;h\right]J\left[b;h\right]" + FOR_BH),
         hid("fys", r"y_{s}\left(A,F,T\right)=A\left[b;h\right]\left(F\left[b;h\right]-T\left[b;h\right]\right)" + FOR_BH),
-        hid("fkq", r"k_{q}\left(X\right)=X\left[a;c\right]q_{v}\left[1;c\right]s_{c}\operatorname{for}a=\left[1...31\right];c=\left[1...32\right]"),
+        hid("fkq", r"k_{q}\left(X,Q\right)=X\left[a;c\right]Q\left[1;c\right]s_{c}\operatorname{for}a=\left[1...31\right];c=\left[1...32\right]"),
     ]
 
 
@@ -135,14 +135,14 @@ def forward() -> list:
         hid("K1", r"K_{1}=T_{1}W_{K}"), hid("K2", r"K_{2}=T_{2}W_{K}"), hid("k3", r"k_{3}=c_{3}W_{K}"),
         hid("V1", r"V_{1}=T_{1}W_{V}"), hid("V2", r"V_{2}=T_{2}W_{V}"), hid("v3", r"v_{3}=c_{3}W_{V}"),
         # scores per head: (k * q) summed within each head, times 1/sqrt(8)
-        hid("S1", r"S_{1}=k_{q}\left(K_{1}\right)H_{s}"),
-        hid("S2", r"S_{2}=k_{q}\left(K_{2}\right)H_{s}"),
+        hid("S1", r"S_{1}=k_{q}\left(K_{1},q_{v}\right)H_{s}"),
+        hid("S2", r"S_{2}=k_{q}\left(K_{2},q_{v}\right)H_{s}"),
         hid("s3", r"s_{3}=\left(k_{3}\left[1;c\right]q_{v}\left[1;c\right]s_{c}\operatorname{for}a=\left[1\right];c=\left[1...32\right]\right)H_{s}"),
         hid("A1", r"A_{1}=\left[\left(s_{f}\left(S_{1}\left[a;h\right],S_{2}\left[b;h\right],s_{3}\left[1;h\right],S_{1}\left[a;h\right]\right)" + FOR_BH + r"\right)" + OVER_A + r"\right]"),
         hid("A2", r"A_{2}=\left[\left(s_{f}\left(S_{1}\left[a;h\right],S_{2}\left[b;h\right],s_{3}\left[1;h\right],S_{2}\left[b;h\right]\right)" + FOR_BH + r"\right)" + OVER_A + r"\right]"),
         hid("A3", r"A_{3}=\left[\left(s_{f}\left(S_{1}\left[a;h\right],S_{2}\left[b;h\right],s_{3}\left[1;h\right],s_{3}\left[1;h\right]\right)" + FOR_BH + r"\right)" + OVER_A + r"\right]"),
         hid("X1", r"X_{1}=A_{1}H_{t}"), hid("X2", r"X_{2}=A_{2}H_{t}"), hid("X3", r"X_{3}=A_{3}H_{t}"),
-        hid("Za", r"Z_{a}=\left[z_{f}\left(X_{1}\left[a\right],X_{2}\left[a\right],X_{3}\left[a\right],a\right)" + OVER_A + r"\right]"),
+        hid("Za", r"Z_{a}=\left[z_{f}\left(X_{1}\left[a\right],X_{2}\left[a\right],X_{3}\left[a\right],V_{1}\left[\left[a\right];\right],V_{2},v_{3}\right)" + OVER_A + r"\right]"),
         hid("Ra", r"R_{a}=O_{n}c_{3}+Z_{a}W_{O}"),
         hid("Hd", r"H_{d}=\left[h_{f}\left(R_{a}\left[a\right]W_{I}\left[k\right],k\right)\operatorname{for}k=\left[1...@K@\right],a=\left[1...31\right]\right]"),
         hid("Rb", r"R_{b}=\left[R_{a}\left[a\right]+\operatorname{total}\left(\left[H_{d}\left[@K@\left(a-1\right)+k\right]W_{U}\left[k\right]\operatorname{for}k=\left[1...@K@\right]\right]\right)+O_{n}B_{o}" + OVER_A + r"\right]"),
@@ -186,8 +186,8 @@ def backward() -> list:
         hid("U1", r"U_{1}=W_{1}\left[a\right]\left[1;h\right]\operatorname{for}a=\left[1...31\right];h=\left[1...4\right]"),
         hid("U2", r"U_{2}=\operatorname{total}\left(Y_{2}\right)"),
         hid("u3", r"u_{3}=O_{r}\operatorname{total}\left(Y_{3}\right)"),
-        hid("L1", r"L_{1}=k_{q}\left(U_{1}H_{t}\right)"),
-        hid("L2", r"L_{2}=k_{q}\left(U_{2}H_{t}\right)"),
+        hid("L1", r"L_{1}=k_{q}\left(U_{1}H_{t},q_{v}\right)"),
+        hid("L2", r"L_{2}=k_{q}\left(U_{2}H_{t},q_{v}\right)"),
         hid("l3", r"l_{3}=\left(\left(u_{3}H_{t}\right)\left[1;c\right]q_{v}\left[1;c\right]s_{c}\operatorname{for}a=\left[1\right];c=\left[1...32\right]\right)"),
         hid("lq", r"l_{q}=O_{r}x_{h}\left(U_{1}H_{t},K_{1}\right)s_{c}+O_{r}x_{h}\left(U_{2}H_{t},K_{2}\right)s_{c}"
                   r"+\left(\left(u_{3}H_{t}\right)\left[1;c\right]k_{3}\left[1;c\right]s_{c}\operatorname{for}a=\left[1\right];c=\left[1...32\right]\right)"),
@@ -324,6 +324,39 @@ def check_unique(ex: list) -> None:
         raise ValueError(f"duplicate expression ids {sorted(dup_ids)} or names {sorted(dup_names)}")
 
 
+def materialize(ex: list) -> list:
+    """Desmos re-derives a named list each time a comprehension in another expression indexes
+    it (L[a] inside [... for a]), which compounds into exponential cost through the backward
+    pass. Values passed whole into a function are computed once. So every expression that has
+    a comprehension and reads named values becomes a call to its own function, with those
+    values as arguments and all indexing inside the function body."""
+    defs = []
+    for e in ex:
+        name = defined_name(e.get("latex") or "")
+        if name and "\\left(" not in e["latex"].split("=", 1)[0]:
+            defs.append(name)
+    out = []
+    for e in ex:
+        latex = e.get("latex") or ""
+        name = defined_name(latex)
+        head, _, body = latex.partition("=")
+        if not name or "\\left(" in head or "\\operatorname{for}" not in body:
+            out.append(e)
+            continue
+        refs = sorted({n for n in defs if n != name and n in body}, key=body.index)
+        if not refs:
+            out.append(e)
+            continue
+        params = [f"Z_{{p{i + 1}}}" for i in range(len(refs))]
+        fbody = body
+        for ref, param in sorted(zip(refs, params), key=lambda t: -len(t[0])):
+            fbody = fbody.replace(ref, param)
+        fname = f"u_{{w{e['id']}}}"
+        out.append(hid("m" + e["id"], f"{fname}\\left({','.join(params)}\\right)={fbody}"))
+        out.append({**e, "latex": f"{name}={fname}\\left({','.join(refs)}\\right)"})
+    return out
+
+
 def build(npz: dict, lr: float, wd: float) -> dict:
     init = {k[len("init_"):]: npz[k] for k in npz if k.startswith("init_")}
     width = int(init["W_in"].shape[1]) if "W_in" in init else 0
@@ -346,6 +379,7 @@ def build(npz: dict, lr: float, wd: float) -> dict:
     for e in ex:
         if "latex" in e:
             e["latex"] = e["latex"].replace("@K@", str(width // 32)).replace("@W@", str(width))
+    ex = materialize(ex)
     check_unique(ex)
     return {
         "version": 11,

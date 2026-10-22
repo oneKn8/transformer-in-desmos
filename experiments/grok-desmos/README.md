@@ -8,7 +8,7 @@ Goal: train the one-layer transformer from [`../grokking/`](../grokking/) on (a 
 |---|---|
 | `ref_step.py`: the training step in the exact structured form the graph uses | Verified. Matches torch autograd on grok.py's model: logits to 1e-12, every gradient to 1e-10 relative, parameters after 20 AdamW steps to 1e-9 (`test_ref_step.py`, 4 tests). |
 | `run_ref.py`: full training run with that step | Verified. Reproduces the grok: test accuracy 42% from step 100 to 400, 99% at step 1140, key-frequency share of the embedding 0.26 to 0.90. 1,400 steps in 21 s. |
-| `gen_grok.py`: the Desmos training graph (any MLP width; views: pair grid, Fourier circle and spectrum, accuracy history; go / stop) | Built, loads with no errors (width 128); `test_gen_grok.py` checks ids, names and block layout. Not yet checked against `check_data.py`'s numbers, and too slow: the forward pass alone takes 2 to 4.5 s per update at load average about 13, while the same elementwise operations on synthetic data take under 0.1 s. Under investigation. |
+| `gen_grok.py`: the Desmos training graph (any MLP width; views: pair grid, Fourier circle and spectrum, accuracy history; go / stop) | VERIFIED for MLP width 32 (2026-10-22): loads in about 3 s; at initialization the right/wrong grid matches numpy on all 961 pairs and all 11 gradient tensors match to 1.3e-15 relative; after one AdamW step the weights match to 3.3e-16; after 20 real ticker steps every weight matches the numpy run to 5.8e-15. The fix that made it usable: every comprehension that reads named lists runs inside its own function with those lists passed in whole (see Design). |
 | `check_data.py`: reference loss, right/wrong grid, gradients, and weights after 1, 5 and 20 steps, flattened like the graph's lists | Written, used for the comparison above once the graph is fast enough to run. |
 
 ## Chosen run (2026-10-22)
@@ -19,6 +19,7 @@ MLP width 32 instead of 128, train fraction 0.5, seed 0, AdamW lr 3e-2, weight d
 
 - Position 3 is always "=", so the query and the third key and value are single rows; positions 1 and 2 only see one token each, so their keys and values are 31-row token tables gathered per pair.
 - All 31 x 31 pairs live as a list of 31 matrices (block a holds the pairs (a, b) in row b), which is also the picture: a grid of right and wrong cells.
+- Desmos re-derives a named list every time a comprehension in another expression indexes it (`L[a]` inside `[... for a]`), which compounded into minutes per step through the backward pass (a chain of lists that each read all earlier ones doubled in cost per level). Lists passed whole into a function are computed once, so `gen_grok.py` rewrites every such expression as a call to its own function (`materialize`). Before: first evaluation over 4 minutes; after: about 3 s.
 - Desmos actions cannot write matrices larger than 9x9, so every parameter and both AdamW moments are flat lists (about 43.7k numbers) rewritten each tick and reshaped into matrices each step.
 
 ## Reproduce
