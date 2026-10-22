@@ -8,6 +8,7 @@ import json
 import numpy as np
 import pytest
 
+import desmos_passes as dp
 import gen_desmos as g
 
 RNG = np.random.default_rng(0)
@@ -97,3 +98,24 @@ def test_build_rejects_bad_inputs():
         g.build([0] * 33, tiny_weights(), CFG, SYMBOLS)
     with pytest.raises(ValueError):
         g.build([1], tiny_weights(), {**CFG, "d_model": 128}, SYMBOLS)
+
+
+def test_comprehensions_read_named_values_only_through_function_arguments():
+    """Desmos re-derives a named list each time a comprehension in another expression indexes
+    it; the materialize pass must leave no value expression doing that."""
+    ex = g.build([20, 5, 12], tiny_weights(), CFG, SYMBOLS)["expressions"]["list"]
+    values = {dp.defined_name(e["latex"]) for e in ex if dp.is_value(e.get("latex") or "")}
+    for e in ex:
+        latex = e.get("latex") or ""
+        if dp.is_value(latex) and "\\operatorname{for}" in latex:
+            body = latex.partition("=")[2]
+            assert not set(dp.names_in(body)) & (values - {dp.defined_name(latex)}), e["id"]
+    hd = next(e["latex"] for e in ex if e["id"] == "h0")
+    assert hd == r"H_{0}=u_{wh0}\left(M_{0},W_{u0}\right)"
+
+
+def test_random_seed_is_pinned_and_validated():
+    assert g.build([1], tiny_weights(), CFG, SYMBOLS)["randomSeed"] == g.DEFAULT_RANDOM_SEED
+    assert g.build([1], tiny_weights(), CFG, SYMBOLS, "0" * 32)["randomSeed"] == "0" * 32
+    with pytest.raises(ValueError):
+        g.build([1], tiny_weights(), CFG, SYMBOLS, "not-a-seed")

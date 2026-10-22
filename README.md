@@ -2,7 +2,7 @@
 
 A character-level transformer that runs entirely inside the Desmos graphing calculator. You type a prompt on a keyboard drawn in the graph, press go, and it writes one character per tick. Every multiply, softmax and normalization is a Desmos expression; Python only trains the model offline, writes the expressions, and checks the numbers.
 
-Status: works (2026-10-22). Live graph: https://www.desmos.com/calculator/yy7jpv4xd3 ("LM: Homer in a calculator"). Open it, collapse the expression list, and click "go / stop".
+Status: works (2026-10-22). Live graph: https://www.desmos.com/calculator/yy7jpv4xd3 ("LM: Homer in a calculator"). Open it, collapse the expression list, and click "go / stop". The saved graph predates the 4x speed-up below; `gen_desmos.py` builds the fast version.
 
 ## Where it stands
 
@@ -10,7 +10,7 @@ Status: works (2026-10-22). Live graph: https://www.desmos.com/calculator/yy7jpv
 |---|---|
 | Model | 2 layers, d_model 64, 2 heads of 32, MLP 256, 32-character window, RMSNorm, GELU, learned positions, 105k parameters, 32-symbol vocabulary (lowercase, space, `. , ; ' "`). Trained offline on Samuel Butler's prose Odyssey and Iliad: 1.76 bits per character on held-out text. See [`experiments/charlm/`](experiments/charlm/). |
 | Exact in Desmos | For a fixed 32-character input, all 1,024 logits from the Desmos graph match the float64 numpy reference to 2.3e-14 (largest logit 14.7). During generation, after the window had slid past 32 characters, the next-character logits matched numpy to 3.3e-15. |
-| Generates text | From the prompt "then minerva said, " the graph wrote "so no cover already; then and out of one". About 0.5 characters per second on a 15 W laptop under heavy load from other jobs; faster on an idle machine (not yet measured). |
+| Generates text | From the prompt "then minerva said, " the graph writes `"then menelaus, where he said,` (the graph's random seed is pinned, so two fresh loads write the same text). About 4.7 characters per second on a 15 W laptop with the tab in front and the CPU otherwise quiet: a forward pass takes 165 to 190 ms. See [`experiments/gen-speed/`](experiments/gen-speed/). |
 | Trains in Desmos too | A one-layer transformer trained from scratch inside Desmos (hand-written backward pass, AdamW, one step per tick) grokked (a+b) mod 31: 42% held-out plateau, then 99.17% at step 587, with the Fourier circle forming in the graph. See [`experiments/grok-desmos/`](experiments/grok-desmos/). |
 | How it fits | Desmos matrices stop at 32x32, so every weight is cut into 32x32 blocks and every activation is a list of blocks. Each attention head is exactly one 32-column block. Lists of matrices are never rendered in the expression list, so the forward pass is not slowed by display. |
 
@@ -31,8 +31,9 @@ To check the numbers yourself: `python3 gen_desmos.py out/lm_ref.json` builds th
 ## Layout
 
 - `gen_desmos.py`: weights to a Desmos graph state (model, sampler, text display, keyboard). `test_gen_desmos.py` pins its block layout.
+- `desmos_passes.py`: passes over a graph shared by both generators, chiefly `materialize`, which keeps Desmos from re-deriving lists (generation 4x faster; the training graph's first evaluation from over 4 minutes to 3 s).
 - `experiments/charlm/`: training, the size-versus-quality study, the numpy reference forward pass, exported weights.
-- `experiments/attention-bench/`, `experiments/ticker-bench/`: the engine measurements that shaped the design.
+- `experiments/attention-bench/`, `experiments/ticker-bench/`, `experiments/gen-speed/`: the engine measurements that shaped the design.
 
 ## Prior work
 

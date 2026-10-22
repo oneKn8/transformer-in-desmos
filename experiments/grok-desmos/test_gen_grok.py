@@ -4,6 +4,7 @@ import json
 import numpy as np
 import pytest
 
+import desmos_passes as dp
 import gen_grok as gg
 import ref_step as rs
 
@@ -26,7 +27,7 @@ def test_graph_is_well_formed(width):
     ex = state["expressions"]["list"]
     ids = [e["id"] for e in ex]
     assert len(ids) == len(set(ids))
-    names = [n for n in (gg.defined_name(e.get("latex") or "") for e in ex) if n]
+    names = [n for n in (dp.defined_name(e.get("latex") or "") for e in ex) if n]
     assert len(names) == len(set(names))
     for needed in ("As", "Gl", "Cg", "ge", "nwe", "grid", "circ", "bgo", "rd"):
         assert needed in ids
@@ -41,7 +42,7 @@ def test_no_comprehension_reads_named_lists_directly():
     ex = gg.build(fake_npz(32), lr=3e-2, wd=1.0)["expressions"]["list"]
     defs = set()
     for e in ex:
-        name = gg.defined_name(e.get("latex") or "")
+        name = dp.defined_name(e.get("latex") or "")
         if name and "\\left(" not in e["latex"].split("=", 1)[0]:
             defs.add(name)
     for e in ex:
@@ -49,7 +50,7 @@ def test_no_comprehension_reads_named_lists_directly():
         head, _, body = latex.partition("=")
         if "\\left(" in head or "\\operatorname{for}" not in body:
             continue
-        assert not [n for n in defs if n in body and n != gg.defined_name(latex)], e["id"]
+        assert not [n for n in defs if n in body and n != dp.defined_name(latex)], e["id"]
 
 
 def test_state_lists_hold_the_init_weights_row_major():
@@ -70,7 +71,3 @@ def test_rejects_bad_widths_and_missing_tensors():
     with pytest.raises(ValueError):
         gg.build(npz, lr=3e-2, wd=1.0)
 
-
-def test_check_unique_catches_name_clashes():
-    with pytest.raises(ValueError):
-        gg.check_unique([{"id": "x1", "latex": "g_{o}=0"}, {"id": "x2", "latex": r"g_{o}=\left[1\right]"}])

@@ -18,9 +18,13 @@ Usage: python3 gen_grok.py runs/seed0.npz OUT.json [--lr 3e-2] [--wd 1]
 """
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # language-model/, for the shared passes
+from desmos_passes import check_unique, materialize  # noqa: E402 -- needs the path set on the line above
 
 P = 31
 FOR_BC = r"\operatorname{for}b=\left[1...31\right];c=\left[1...32\right]"     # 31 x 32 block
@@ -304,57 +308,6 @@ def views() -> list:
              label="step ${t_{s}}   train ${a_{r}}   held-out ${a_{e}}   Fourier share ${k_{h}}", showLabel=True,
              labelOrientation="right"),
     ]
-
-
-def defined_name(latex: str):
-    """The variable or function an expression defines, e.g. 'g_{c}' or 'm_{r}', else None."""
-    head = latex.split("=", 1)[0] if "=" in latex else ""
-    if not head or "\\to" in head or head.startswith("\\"):
-        return None
-    return head.split("\\left(", 1)[0]
-
-
-def check_unique(ex: list) -> None:
-    """Desmos silently misbehaves on a repeated id or a name defined twice; refuse to emit."""
-    ids = [e["id"] for e in ex]
-    dup_ids = {i for i in ids if ids.count(i) > 1}
-    names = [n for n in (defined_name(e.get("latex") or "") for e in ex) if n]
-    dup_names = {n for n in names if names.count(n) > 1}
-    if dup_ids or dup_names:
-        raise ValueError(f"duplicate expression ids {sorted(dup_ids)} or names {sorted(dup_names)}")
-
-
-def materialize(ex: list) -> list:
-    """Desmos re-derives a named list each time a comprehension in another expression indexes
-    it (L[a] inside [... for a]), which compounds into exponential cost through the backward
-    pass. Values passed whole into a function are computed once. So every expression that has
-    a comprehension and reads named values becomes a call to its own function, with those
-    values as arguments and all indexing inside the function body."""
-    defs = []
-    for e in ex:
-        name = defined_name(e.get("latex") or "")
-        if name and "\\left(" not in e["latex"].split("=", 1)[0]:
-            defs.append(name)
-    out = []
-    for e in ex:
-        latex = e.get("latex") or ""
-        name = defined_name(latex)
-        head, _, body = latex.partition("=")
-        if not name or "\\left(" in head or "\\operatorname{for}" not in body:
-            out.append(e)
-            continue
-        refs = sorted({n for n in defs if n != name and n in body}, key=body.index)
-        if not refs:
-            out.append(e)
-            continue
-        params = [f"Z_{{p{i + 1}}}" for i in range(len(refs))]
-        fbody = body
-        for ref, param in sorted(zip(refs, params), key=lambda t: -len(t[0])):
-            fbody = fbody.replace(ref, param)
-        fname = f"u_{{w{e['id']}}}"
-        out.append(hid("m" + e["id"], f"{fname}\\left({','.join(params)}\\right)={fbody}"))
-        out.append({**e, "latex": f"{name}={fname}\\left({','.join(refs)}\\right)"})
-    return out
 
 
 def build(npz: dict, lr: float, wd: float) -> dict:

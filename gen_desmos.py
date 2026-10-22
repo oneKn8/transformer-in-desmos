@@ -12,24 +12,33 @@ every weight matrix is cut into 32x32 blocks and every activation is a LIST of 3
 Lists of matrices are never rendered in the expression list, so the forward pass costs the
 same with the list open. Comprehensions that would be passed straight into a function call
 are wrapped in their own small functions (Desmos misparses the direct form), and every
-function is hidden (one-variable functions would otherwise be plotted as curves).
+function is hidden (one-variable functions would otherwise be plotted as curves). Last, every
+value expression with a comprehension that reads other named values becomes a call to its own
+function (desmos_passes.materialize): Desmos re-derives a named list each time a comprehension
+elsewhere indexes it, which made each character about 4x slower.
 
 The op-by-op specification is experiments/charlm/reference_numpy.py; the Desmos logits are
 checked against experiments/charlm/best/reference.npz.
 
-Usage: python3 gen_desmos.py OUT.json [--prompt "tell me, o muse, of that ingenio"]
+Usage: python3 gen_desmos.py OUT.json [--prompt "tell me, o muse, of that ingenio"] [--random-seed HEX32]
 """
 import argparse
 import json
+import re
 from pathlib import Path
 
 import numpy as np
+
+from desmos_passes import check_unique, materialize
 
 HERE = Path(__file__).resolve().parent
 BEST = HERE / "experiments" / "charlm" / "best"
 BLOCK = 32
 GELU_C = "0.7978845608028654"  # sqrt(2/pi) to 16 significant digits
 FOR_AB = r"\operatorname{for}a=\left[1...32\right];b=\left[1...32\right]"
+# Desmos seeds random() from the state's randomSeed and invents a new one on each load when it is
+# missing, so it is pinned: the same prompt and seed slider then write the same text every time.
+DEFAULT_RANDOM_SEED = "5d3e8a1f0b7c4e29a6f1d8b3c0e7a542"
 
 
 def num(x: float) -> str:
@@ -233,8 +242,10 @@ def keyboard(symbols: str) -> list:
     return ex
 
 
-def build(prompt_ids: list, wt: dict, cfg: dict, symbols: str) -> dict:
+def build(prompt_ids: list, wt: dict, cfg: dict, symbols: str, random_seed: str = DEFAULT_RANDOM_SEED) -> dict:
     n_layer = cfg["n_layer"]
+    if not re.fullmatch(r"[0-9a-f]{32}", random_seed):
+        raise ValueError(f"random_seed must be 32 lowercase hex digits, got {random_seed!r}")
     if (cfg["d_model"], cfg["n_head"], cfg["ctx"], cfg["vocab_size"]) != (64, 2, 32, 32):
         raise ValueError("this generator is written for d_model 64, 2 heads, ctx 32, vocab 32")
     if not 1 <= len(prompt_ids) <= cfg["ctx"]:
@@ -270,9 +281,12 @@ def build(prompt_ids: list, wt: dict, cfg: dict, symbols: str) -> dict:
     ]
     ex += generation(len(prompt_ids)) + text_display(symbols) + keyboard(symbols)
     ex += weights_exprs(wt, n_layer)
+    ex = materialize(ex)
+    check_unique(ex)
     bottom = -LINE_H * (MAX_CHARS // LINE) - 3 - 2.5 * (len(symbols) // KEY_COLS) - 3
     return {
         "version": 11,
+        "randomSeed": random_seed,
         "graph": {"viewport": {"xmin": -2, "xmax": 5 * KEY_COLS + 3, "ymin": bottom, "ymax": 2},
                   "showGrid": False, "showXAxis": False, "showYAxis": False},
         "expressions": {
@@ -288,6 +302,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("out", type=Path)
     ap.add_argument("--prompt", default=None, help="prompt text; default: the reference input")
+    ap.add_argument("--random-seed", default=DEFAULT_RANDOM_SEED, help="Desmos randomSeed (32 hex digits)")
     args = ap.parse_args()
     cfg_all = json.loads((BEST / "config.json").read_text())
     cfg, symbols = cfg_all["model_config"], cfg_all["vocab"]["symbols"]
@@ -297,7 +312,7 @@ def main() -> None:
     unknown = sorted(set(prompt) - set(symbols))
     if unknown:
         raise ValueError(f"prompt has characters outside the 32-symbol vocab: {unknown}")
-    state = build([symbols.index(c) for c in prompt], wt, cfg, symbols)
+    state = build([symbols.index(c) for c in prompt], wt, cfg, symbols, args.random_seed)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(state))
     size_kb = args.out.stat().st_size / 1024

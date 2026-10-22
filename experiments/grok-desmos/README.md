@@ -25,7 +25,7 @@ MLP width 32 instead of 128, train fraction 0.5, seed 0, AdamW lr 3e-2, weight d
 
 - Position 3 is always "=", so the query and the third key and value are single rows; positions 1 and 2 only see one token each, so their keys and values are 31-row token tables gathered per pair.
 - All 31 x 31 pairs live as a list of 31 matrices (block a holds the pairs (a, b) in row b), which is also the picture: a grid of right and wrong cells.
-- Desmos re-derives a named list every time a comprehension in another expression indexes it (`L[a]` inside `[... for a]`), which compounded into minutes per step through the backward pass (a chain of lists that each read all earlier ones doubled in cost per level). Lists passed whole into a function are computed once, so `gen_grok.py` rewrites every such expression as a call to its own function (`materialize`). Before: first evaluation over 4 minutes; after: about 3 s.
+- Desmos re-derives a named list every time a comprehension in another expression indexes it (`L[a]` inside `[... for a]`), which compounded into minutes per step through the backward pass (a chain of lists that each read all earlier ones doubled in cost per level). Lists passed whole into a function are computed once, so `gen_grok.py` rewrites every such expression as a call to its own function (`materialize` in [`../../desmos_passes.py`](../../desmos_passes.py), shared with the text generator). Before: first evaluation over 4 minutes; after: about 3 s.
 - Desmos actions cannot write matrices larger than 9x9, so every parameter and both AdamW moments are flat lists (about 43.7k numbers) rewritten each tick and reshaped into matrices each step.
 
 ## Reproduce
