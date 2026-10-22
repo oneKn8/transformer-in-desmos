@@ -25,12 +25,18 @@ P = 31          # modulus; tokens 0..30 are numbers, 31 is "="
 D = 32
 H = 4
 DH = D // H
-M = 128
+M = 128         # default MLP width (grok.py's recommended run); the step itself reads widths from w
 BETA1, BETA2, EPS = 0.9, 0.98, 1e-8
-PARAM_SHAPES = {
-    "W_E": (P + 1, D), "W_pos": (3, D), "W_Q": (D, D), "W_K": (D, D), "W_V": (D, D),
-    "W_O": (D, D), "W_in": (D, M), "b_in": (M,), "W_out": (M, D), "b_out": (D,), "W_U": (D, P),
-}
+
+
+def param_shapes(m: int = M) -> dict:
+    return {
+        "W_E": (P + 1, D), "W_pos": (3, D), "W_Q": (D, D), "W_K": (D, D), "W_V": (D, D),
+        "W_O": (D, D), "W_in": (D, m), "b_in": (m,), "W_out": (m, D), "b_out": (D,), "W_U": (D, P),
+    }
+
+
+PARAM_SHAPES = param_shapes()
 # head h owns columns DH*h .. DH*h+DH-1; HSUM sums a 32-vector into its 4 head totals
 HSUM = np.kron(np.eye(H), np.ones((DH, 1)))  # (32, 4)
 

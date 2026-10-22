@@ -8,8 +8,12 @@ Goal: train the one-layer transformer from [`../grokking/`](../grokking/) on (a 
 |---|---|
 | `ref_step.py`: the training step in the exact structured form the graph uses | Verified. Matches torch autograd on grok.py's model: logits to 1e-12, every gradient to 1e-10 relative, parameters after 20 AdamW steps to 1e-9 (`test_ref_step.py`, 4 tests). |
 | `run_ref.py`: full training run with that step | Verified. Reproduces the grok: test accuracy 42% from step 100 to 400, 99% at step 1140, key-frequency share of the embedding 0.26 to 0.90. 1,400 steps in 21 s. |
-| `gen_grok.py`: the Desmos training graph | Built, loads with no errors. Not yet checked against `check_data.py`'s numbers, and too slow: the forward pass alone takes 2 to 4.5 s per update at load average about 13, while the same elementwise operations on synthetic data take under 0.1 s. Under investigation. |
+| `gen_grok.py`: the Desmos training graph (any MLP width; views: pair grid, Fourier circle and spectrum, accuracy history; go / stop) | Built, loads with no errors (width 128); `test_gen_grok.py` checks ids, names and block layout. Not yet checked against `check_data.py`'s numbers, and too slow: the forward pass alone takes 2 to 4.5 s per update at load average about 13, while the same elementwise operations on synthetic data take under 0.1 s. Under investigation. |
 | `check_data.py`: reference loss, right/wrong grid, gradients, and weights after 1, 5 and 20 steps, flattened like the graph's lists | Written, used for the comparison above once the graph is fast enough to run. |
+
+## Chosen run (2026-10-22)
+
+MLP width 32 instead of 128, train fraction 0.5, seed 0, AdamW lr 3e-2, weight decay 1. In numpy it memorizes by step 70, holds 42% held-out accuracy for 270 steps, reaches 50% at step 340 and 99% at step 590: a real grokking delay in half the steps of the width-128 run, with about 8.2k parameters (24.6k numbers of state with the AdamW moments). Seeds 1 to 3 at fraction 0.5 grok in 210 to 360 steps with short or no plateau; at fraction 0.6 there is no plateau. `python3 run_ref.py runs/m32_f0.5_s0.npz --mlp 32 --frac 0.5 --seed 0 --steps 2500`.
 
 ## Design
 

@@ -28,11 +28,17 @@ FOR_BH = r"\operatorname{for}b=\left[1...31\right];h=\left[1...4\right]"      # 
 FOR_BL = r"\operatorname{for}b=\left[1...31\right];c=\left[1...31\right]"     # 31 x 31 block
 OVER_A = r"\operatorname{for}a=\left[1...31\right]"
 # parameter key -> (desmos key, rows, cols); flat lists are row-major
-TENSORS = {
-    "W_E": ("e", 32, 32), "W_pos": ("p", 3, 32), "W_Q": ("q", 32, 32), "W_K": ("k", 32, 32),
-    "W_V": ("v", 32, 32), "W_O": ("o", 32, 32), "W_in": ("i", 32, 128), "b_in": ("b", 1, 128),
-    "W_out": ("u", 128, 32), "b_out": ("c", 1, 32), "W_U": ("y", 32, 31),
-}
+def tensors(width: int = 128) -> dict:
+    return {
+        "W_E": ("e", 32, 32), "W_pos": ("p", 3, 32), "W_Q": ("q", 32, 32), "W_K": ("k", 32, 32),
+        "W_V": ("v", 32, 32), "W_O": ("o", 32, 32), "W_in": ("i", 32, width), "b_in": ("b", 1, width),
+        "W_out": ("u", width, 32), "b_out": ("c", 1, 32), "W_U": ("y", 32, 31),
+    }
+
+
+TENSORS = tensors()   # key letters and the default (MLP 128) shapes; build() uses the npz's width
+# Expressions are written with @K@ (MLP width / 32, the number of hidden blocks) and @W@ (the MLP
+# width); build() fills them in.
 
 
 def num(x: float) -> str:
@@ -112,9 +118,9 @@ def params() -> list:
                                ("Y", ("y", 32, 31)))]
     ex += [
         # W_in column block k: rows a, columns 32(k-1)+b
-        hid("WI", r"W_{I}=\left[\left(w_{i}\left[128\left(a-1\right)+32\left(k-1\right)+b\right]\operatorname{for}a=\left[1...32\right];b=\left[1...32\right]\right)\operatorname{for}k=\left[1...4\right]\right]"),
+        hid("WI", r"W_{I}=\left[\left(w_{i}\left[@W@\left(a-1\right)+32\left(k-1\right)+b\right]\operatorname{for}a=\left[1...32\right];b=\left[1...32\right]\right)\operatorname{for}k=\left[1...@K@\right]\right]"),
         # W_out row block k: rows 32(k-1)+a
-        hid("WU", r"W_{U}=\left[\left(w_{u}\left[32\left(32\left(k-1\right)+a-1\right)+b\right]\operatorname{for}a=\left[1...32\right];b=\left[1...32\right]\right)\operatorname{for}k=\left[1...4\right]\right]"),
+        hid("WU", r"W_{U}=\left[\left(w_{u}\left[32\left(32\left(k-1\right)+a-1\right)+b\right]\operatorname{for}a=\left[1...32\right];b=\left[1...32\right]\right)\operatorname{for}k=\left[1...@K@\right]\right]"),
         hid("Bo", r"B_{o}=w_{c}\left[b\right]\operatorname{for}a=\left[1\right];b=\left[1...32\right]"),
     ]
     return ex
@@ -138,8 +144,8 @@ def forward() -> list:
         hid("X1", r"X_{1}=A_{1}H_{t}"), hid("X2", r"X_{2}=A_{2}H_{t}"), hid("X3", r"X_{3}=A_{3}H_{t}"),
         hid("Za", r"Z_{a}=\left[z_{f}\left(X_{1}\left[a\right],X_{2}\left[a\right],X_{3}\left[a\right],a\right)" + OVER_A + r"\right]"),
         hid("Ra", r"R_{a}=O_{n}c_{3}+Z_{a}W_{O}"),
-        hid("Hd", r"H_{d}=\left[h_{f}\left(R_{a}\left[a\right]W_{I}\left[k\right],k\right)\operatorname{for}k=\left[1...4\right],a=\left[1...31\right]\right]"),
-        hid("Rb", r"R_{b}=\left[R_{a}\left[a\right]+\operatorname{total}\left(\left[H_{d}\left[4\left(a-1\right)+k\right]W_{U}\left[k\right]\operatorname{for}k=\left[1...4\right]\right]\right)+O_{n}B_{o}" + OVER_A + r"\right]"),
+        hid("Hd", r"H_{d}=\left[h_{f}\left(R_{a}\left[a\right]W_{I}\left[k\right],k\right)\operatorname{for}k=\left[1...@K@\right],a=\left[1...31\right]\right]"),
+        hid("Rb", r"R_{b}=\left[R_{a}\left[a\right]+\operatorname{total}\left(\left[H_{d}\left[@K@\left(a-1\right)+k\right]W_{U}\left[k\right]\operatorname{for}k=\left[1...@K@\right]\right]\right)+O_{n}B_{o}" + OVER_A + r"\right]"),
         hid("Gl", r"G_{l}=R_{b}W_{Y}"),
         hid("Mx", r"M_{x}=\left[m_{f}\left(G_{l}\left[a\right]\right)" + OVER_A + r"\right]"),
         hid("Ex", r"E_{x}=\left[e_{f}\left(G_{l}\left[a\right],M_{x}\left[a\right]\right)" + OVER_A + r"\right]"),
@@ -156,12 +162,12 @@ def backward() -> list:
         hid("Dl", r"D_{l}=\left[d_{f}\left(P_{b}\left[a\right],a\right)" + OVER_A + r"\right]"),
         hid("Gy", r"G_{y}=\operatorname{total}\left(\left[R_{b}\left[a\right]^{T}D_{l}\left[a\right]" + OVER_A + r"\right]\right)"),
         hid("Db", r"D_{b}=D_{l}W_{Y}^{T}"),
-        hid("Gu", r"G_{u}=\left[\operatorname{total}\left(\left[H_{d}\left[4\left(a-1\right)+k\right]^{T}D_{b}\left[a\right]" + OVER_A + r"\right]\right)\operatorname{for}k=\left[1...4\right]\right]"),
+        hid("Gu", r"G_{u}=\left[\operatorname{total}\left(\left[H_{d}\left[@K@\left(a-1\right)+k\right]^{T}D_{b}\left[a\right]" + OVER_A + r"\right]\right)\operatorname{for}k=\left[1...@K@\right]\right]"),
         hid("Gc", r"G_{c}=\operatorname{total}\left(O_{r}D_{b}\right)"),
-        hid("Du", r"D_{u}=\left[u_{f}\left(D_{b}\left[a\right]W_{U}\left[k\right]^{T},H_{d}\left[4\left(a-1\right)+k\right]\right)\operatorname{for}k=\left[1...4\right],a=\left[1...31\right]\right]"),
-        hid("Gi", r"G_{i}=\left[\operatorname{total}\left(\left[R_{a}\left[a\right]^{T}D_{u}\left[4\left(a-1\right)+k\right]" + OVER_A + r"\right]\right)\operatorname{for}k=\left[1...4\right]\right]"),
-        hid("Gb", r"G_{b}=\left[\operatorname{total}\left(\left[O_{r}D_{u}\left[4\left(a-1\right)+k\right]" + OVER_A + r"\right]\right)\operatorname{for}k=\left[1...4\right]\right]"),
-        hid("Dr", r"D_{r}=\left[D_{b}\left[a\right]+\operatorname{total}\left(\left[D_{u}\left[4\left(a-1\right)+k\right]W_{I}\left[k\right]^{T}\operatorname{for}k=\left[1...4\right]\right]\right)" + OVER_A + r"\right]"),
+        hid("Du", r"D_{u}=\left[u_{f}\left(D_{b}\left[a\right]W_{U}\left[k\right]^{T},H_{d}\left[@K@\left(a-1\right)+k\right]\right)\operatorname{for}k=\left[1...@K@\right],a=\left[1...31\right]\right]"),
+        hid("Gi", r"G_{i}=\left[\operatorname{total}\left(\left[R_{a}\left[a\right]^{T}D_{u}\left[@K@\left(a-1\right)+k\right]" + OVER_A + r"\right]\right)\operatorname{for}k=\left[1...@K@\right]\right]"),
+        hid("Gb", r"G_{b}=\left[\operatorname{total}\left(\left[O_{r}D_{u}\left[@K@\left(a-1\right)+k\right]" + OVER_A + r"\right]\right)\operatorname{for}k=\left[1...@K@\right]\right]"),
+        hid("Dr", r"D_{r}=\left[D_{b}\left[a\right]+\operatorname{total}\left(\left[D_{u}\left[@K@\left(a-1\right)+k\right]W_{I}\left[k\right]^{T}\operatorname{for}k=\left[1...@K@\right]\right]\right)" + OVER_A + r"\right]"),
         hid("Go", r"G_{o}=\operatorname{total}\left(\left[Z_{a}\left[a\right]^{T}D_{r}\left[a\right]" + OVER_A + r"\right]\right)"),
         hid("Dz", r"D_{z}=D_{r}W_{O}^{T}"),
         hid("C1", r"C_{1}=\operatorname{total}\left(O_{r}D_{r}\right)"),
@@ -205,10 +211,10 @@ def flat_grads() -> list:
         flat("k", "G_{k}", 32, 32), flat("v", "G_{v}", 32, 32), flat("o", "G_{o}", 32, 32),
         flat("y", "G_{y}", 32, 31), flat("c", "G_{c}", 1, 32),
         # W_in: row a, column 32(k-1)+b lives in block G_i[k]; flat index 128(a-1)+32(k-1)+b
-        hid("gi", r"g_{i}=\left[G_{i}\left[k\right]\left[a;b\right]\operatorname{for}b=\left[1...32\right],k=\left[1...4\right],a=\left[1...32\right]\right]"),
-        hid("gb", r"g_{b}=\left[G_{b}\left[k\right]\left[1;b\right]\operatorname{for}b=\left[1...32\right],k=\left[1...4\right]\right]"),
+        hid("gi", r"g_{i}=\left[G_{i}\left[k\right]\left[a;b\right]\operatorname{for}b=\left[1...32\right],k=\left[1...@K@\right],a=\left[1...32\right]\right]"),
+        hid("gb", r"g_{b}=\left[G_{b}\left[k\right]\left[1;b\right]\operatorname{for}b=\left[1...32\right],k=\left[1...@K@\right]\right]"),
         # W_out: row 32(k-1)+a lives in block G_u[k]
-        hid("gu", r"g_{u}=\left[G_{u}\left[k\right]\left[a;b\right]\operatorname{for}b=\left[1...32\right],a=\left[1...32\right],k=\left[1...4\right]\right]"),
+        hid("gu", r"g_{u}=\left[G_{u}\left[k\right]\left[a;b\right]\operatorname{for}b=\left[1...32\right],a=\left[1...32\right],k=\left[1...@K@\right]\right]"),
     ]
 
 
@@ -231,15 +237,102 @@ def optimizer(lr: float, wd: float) -> list:
     for _, (key, _, _) in TENSORS.items():
         assigns += [f"w_{{{key}}}\\to w_{{n{key}}}", f"m_{{{key}}}\\to m_{{n{key}}}", f"v_{{{key}}}\\to v_{{n{key}}}"]
     assigns.append(r"t_{s}\to t_{s}+1")
+    # accuracy history, recorded before the step every 10 steps
+    for hist, val in (("h_{t}", "t_{s}"), ("h_{a}", "a_{r}"), ("h_{b}", "a_{e}"), ("h_{k}", "k_{h}")):
+        assigns.append(f"{hist}\\to\\left\\{{\\operatorname{{mod}}\\left(t_{{s}},10\\right)=0:\\operatorname{{join}}\\left({hist},{val}\\right),{hist}\\right\\}}")
     ex.append(hid("As", r"A_{s}=\left(" + ",".join(assigns) + r"\right)"))
     return ex
 
 
+GRID_X, GRID_Y = 0, 0           # pair grid: cell (a, b) at x = b, y = -a
+CIRC_X, CIRC_Y, CIRC_R = 50, -16, 13
+SPEC_X, SPEC_Y = 36, -34        # Fourier spectrum bars
+HIST_X, HIST_Y, HIST_W, HIST_H = 66, -31, 30, 28
+
+
+def views() -> list:
+    """What the viewer watches: the pair grid, the embedding on its strongest Fourier
+    frequency, the spectrum, and the accuracy history."""
+    ab = r"\operatorname{for}b=\left[1...31\right],a=\left[1...31\right]"
+    return [
+        # accuracy: flattened right/wrong grid and train mask, same order as the cells
+        hid("cf", r"c_{f}=\left[C_{g}\left[a;b\right]" + ab + r"\right]"),
+        hid("tf", r"t_{f}=\left[T_{r}\left[a;b\right]" + ab + r"\right]"),
+        hid("ar", r"a_{r}=\frac{\operatorname{total}\left(c_{f}t_{f}\right)}{n_{tr}}"),
+        hid("ae", r"a_{e}=\frac{\operatorname{total}\left(c_{f}\left(1-t_{f}\right)\right)}{961-n_{tr}}"),
+        hid("qx", r"q_{x}=\left[b" + ab + r"\right]"),
+        hid("qy", r"q_{y}=\left[-a" + ab + r"\right]"),
+        hid("qc", r"q_{c}=\operatorname{rgb}\left(\left\{t_{f}=1:\left\{c_{f}=1:190,110\right\},\left\{c_{f}=1:46,235\right\}\right\},"
+                  r"\left\{t_{f}=1:\left\{c_{f}=1:190,110\right\},\left\{c_{f}=1:160,200\right\}\right\},"
+                  r"\left\{t_{f}=1:\left\{c_{f}=1:190,110\right\},\left\{c_{f}=1:67,200\right\}\right\}\right)"),
+        expr("grid", r"\operatorname{polygon}\left(\left(q_{x}-1,q_{y}\right),\left(q_{x},q_{y}\right),\left(q_{x},q_{y}+1\right),\left(q_{x}-1,q_{y}+1\right)\right)",
+             colorLatex="q_{c}", fillOpacity="1", lines=False),
+        # Fourier view: number-token embeddings (rows 1..31 of W_E) against cos / sin of frequency k
+        hid("Ck", r"C_{k}=\cos\left(\frac{2\pi a\left(b-1\right)}{31}\right)\operatorname{for}a=\left[1...15\right];b=\left[1...31\right]"),
+        hid("Sk", r"S_{k}=\sin\left(\frac{2\pi a\left(b-1\right)}{31}\right)\operatorname{for}a=\left[1...15\right];b=\left[1...31\right]"),
+        hid("En", r"E_{n}=W_{E}\left[\left[1...31\right];\right]"),
+        hid("Fc", r"F_{c}=C_{k}E_{n}"),
+        hid("Fs", r"F_{s}=S_{k}E_{n}"),
+        hid("ek", r"e_{k}=\left[\left(F_{c}F_{c}^{T}+F_{s}F_{s}^{T}\right)\left[a;a\right]\operatorname{for}a=\left[1...15\right]\right]"),
+        hid("kh", r"k_{h}=\frac{\operatorname{total}\left(\operatorname{sort}\left(e_{k}\right)\left[\left[13,14,15\right]\right]\right)}{\operatorname{total}\left(e_{k}\right)}"),
+        hid("kf", r"k_{f}=\left[1...15\right]\left[e_{k}=\max\left(e_{k}\right)\right]\left[1\right]"),
+        hid("px", r"p_{x}=\left[\left(E_{n}F_{c}\left[\left[k_{f}\right];\right]^{T}\right)\left[a;1\right]\operatorname{for}a=\left[1...31\right]\right]"),
+        hid("py", r"p_{y}=\left[\left(E_{n}F_{s}\left[\left[k_{f}\right];\right]^{T}\right)\left[a;1\right]\operatorname{for}a=\left[1...31\right]\right]"),
+        hid("pr", r"p_{r}=\max\left(\sqrt{p_{x}^{2}+p_{y}^{2}}\right)"),
+        expr("circ", f"\\left({CIRC_X}+{CIRC_R}\\frac{{p_{{x}}}}{{p_{{r}}}},{CIRC_Y}+{CIRC_R}\\frac{{p_{{y}}}}{{p_{{r}}}}\\right)",
+             color="#6042a6", pointSize="9", lines=True, lineOpacity="0.25"),
+        expr("spec", f"\\operatorname{{polygon}}\\left(\\left({SPEC_X}+a,{SPEC_Y}\\right),\\left({SPEC_X}+a+0.8,{SPEC_Y}\\right),"
+                     f"\\left({SPEC_X}+a+0.8,{SPEC_Y}+6\\frac{{e_{{k}}\\left[a\\right]}}{{\\operatorname{{total}}\\left(e_{{k}}\\right)}}\\right),"
+                     f"\\left({SPEC_X}+a,{SPEC_Y}+6\\frac{{e_{{k}}\\left[a\\right]}}{{\\operatorname{{total}}\\left(e_{{k}}\\right)}}\\right)\\right)"
+                     r"\operatorname{for}a=\left[1...15\right]", color="#6042a6", fillOpacity="0.6", lines=False),
+        # history (state lists written by the step action)
+        hid("ht", r"h_{t}=\left[\right]"), hid("ha", r"h_{a}=\left[\right]"),
+        hid("hb", r"h_{b}=\left[\right]"), hid("hk", r"h_{k}=\left[\right]"),
+        hid("hs", r"h_{s}=\max\left(\left[200,\max\left(h_{t}\right)\right]\right)"),
+        expr("hist_tr", f"\\left({HIST_X}+{HIST_W}\\frac{{h_{{t}}}}{{h_{{s}}}},{HIST_Y}+{HIST_H}h_{{a}}\\right)", color="#888888", pointSize="0", lines=True),
+        expr("hist_te", f"\\left({HIST_X}+{HIST_W}\\frac{{h_{{t}}}}{{h_{{s}}}},{HIST_Y}+{HIST_H}h_{{b}}\\right)", color="#2e9e43", pointSize="0", lines=True),
+        expr("hist_k", f"\\left({HIST_X}+{HIST_W}\\frac{{h_{{t}}}}{{h_{{s}}}},{HIST_Y}+{HIST_H}h_{{k}}\\right)", color="#6042a6", pointSize="0", lines=True),
+        expr("axes", f"\\operatorname{{polygon}}\\left(\\left({HIST_X},{HIST_Y}\\right),\\left({HIST_X}+{HIST_W},{HIST_Y}\\right),"
+                     f"\\left({HIST_X}+{HIST_W},{HIST_Y}+{HIST_H}\\right),\\left({HIST_X},{HIST_Y}+{HIST_H}\\right)\\right)",
+             color="#cccccc", fillOpacity="0", lineWidth="1"),
+        # readout and control
+        expr("run", r"r_{n}=0"),
+        expr("bgo", f"\\left({HIST_X},{HIST_Y}+{HIST_H}+3\\right)", color="#c74440", pointSize="0", pointOpacity="1",
+             label="go / stop", showLabel=True, labelOrientation="right",
+             clickableInfo={"enabled": True, "latex": r"r_{n}\to1-r_{n}"}),
+        expr("rd", f"\\left({HIST_X}+10,{HIST_Y}+{HIST_H}+3\\right)", color="#000000", pointSize="0", pointOpacity="1",
+             label="step ${t_{s}}   train ${a_{r}}   held-out ${a_{e}}   Fourier share ${k_{h}}", showLabel=True,
+             labelOrientation="right"),
+    ]
+
+
+def defined_name(latex: str):
+    """The variable or function an expression defines, e.g. 'g_{c}' or 'm_{r}', else None."""
+    head = latex.split("=", 1)[0] if "=" in latex else ""
+    if not head or "\\to" in head or head.startswith("\\"):
+        return None
+    return head.split("\\left(", 1)[0]
+
+
+def check_unique(ex: list) -> None:
+    """Desmos silently misbehaves on a repeated id or a name defined twice; refuse to emit."""
+    ids = [e["id"] for e in ex]
+    dup_ids = {i for i in ids if ids.count(i) > 1}
+    names = [n for n in (defined_name(e.get("latex") or "") for e in ex) if n]
+    dup_names = {n for n in names if names.count(n) > 1}
+    if dup_ids or dup_names:
+        raise ValueError(f"duplicate expression ids {sorted(dup_ids)} or names {sorted(dup_names)}")
+
+
 def build(npz: dict, lr: float, wd: float) -> dict:
     init = {k[len("init_"):]: npz[k] for k in npz if k.startswith("init_")}
-    if set(init) != set(TENSORS):
-        raise ValueError(f"init tensors {sorted(init)} do not match {sorted(TENSORS)}")
-    for name, (_, r, c) in TENSORS.items():
+    width = int(init["W_in"].shape[1]) if "W_in" in init else 0
+    if width < 32 or width % 32:
+        raise ValueError(f"MLP width must be a positive multiple of 32, got {width}")
+    shapes = tensors(width)
+    if set(init) != set(shapes):
+        raise ValueError(f"init tensors {sorted(init)} do not match {sorted(shapes)}")
+    for name, (_, r, c) in shapes.items():
         if init[name].size != r * c:
             raise ValueError(f"{name} has {init[name].size} values, expected {r * c}")
     pairs = npz["pairs"]
@@ -249,9 +342,21 @@ def build(npz: dict, lr: float, wd: float) -> dict:
         "A one-layer transformer learning (a + b) mod 31 inside Desmos: forward pass, hand-written "
         "backward pass and AdamW, one step per tick.")}]
     ex += state_lists(init) + helpers() + constants(train) + params() + forward() + backward()
-    ex += flat_grads() + optimizer(lr, wd)
-    return {"version": 11, "graph": {"viewport": {"xmin": -2, "xmax": 70, "ymin": -36, "ymax": 2}},
-            "expressions": {"list": ex}}
+    ex += flat_grads() + optimizer(lr, wd) + views()
+    for e in ex:
+        if "latex" in e:
+            e["latex"] = e["latex"].replace("@K@", str(width // 32)).replace("@W@", str(width))
+    check_unique(ex)
+    return {
+        "version": 11,
+        "graph": {"viewport": {"xmin": -2, "xmax": HIST_X + HIST_W + 4, "ymin": -37, "ymax": 4},
+                  "showGrid": False, "showXAxis": False, "showYAxis": False},
+        "expressions": {
+            "list": ex,
+            # one AdamW step per tick while r_n is 1
+            "ticker": {"handlerLatex": r"\left\{r_{n}=1:A_{s}\right\}", "minStepLatex": "0", "open": True, "playing": True},
+        },
+    }
 
 
 def main() -> None:

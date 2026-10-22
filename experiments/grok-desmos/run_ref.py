@@ -56,10 +56,11 @@ def main() -> None:
     ap.add_argument("--lr", type=float, default=3e-2)
     ap.add_argument("--wd", type=float, default=1.0)
     ap.add_argument("--frac", type=float, default=0.5)
+    ap.add_argument("--mlp", type=int, default=rs.M, help="MLP width (multiple of 32)")
     args = ap.parse_args()
 
     grok = load_grok()
-    cfg = grok.RunConfig(p=rs.P, arch="attn", d_model=rs.D, n_heads=rs.H, d_mlp=rs.M, lr=args.lr,
+    cfg = grok.RunConfig(p=rs.P, arch="attn", d_model=rs.D, n_heads=rs.H, d_mlp=args.mlp, lr=args.lr,
                          weight_decay=args.wd, train_frac=args.frac, seed=args.seed, dtype="float64")
     w, pairs = initial_state(grok, cfg)
     w0 = {k: v.copy() for k, v in w.items()}
