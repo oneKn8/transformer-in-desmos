@@ -68,6 +68,22 @@ def formula_fit(logits: np.ndarray, emb: np.ndarray) -> tuple[list, list, float]
     return ks, alphas, float(1 - (resid ** 2).sum() / (y ** 2).sum())
 
 
+def wave_ablation(logits: np.ndarray, emb: np.ndarray, train: np.ndarray) -> dict:
+    """Split every pair's 31 logits into the part on the key-frequency waves over c (cos and sin
+    of the three frequencies: an orthogonal projection) and the rest, and score each part alone.
+    Returns train and held-out accuracy of the waves only and of the logits with them removed."""
+    c = np.arange(rs.P)
+    u = np.stack([fn(2 * np.pi * k * c / rs.P) for k in top_frequencies(emb) for fn in (np.cos, np.sin)], 1)
+    proj = u @ u.T / (rs.P / 2)                      # each column's squared norm is 31 / 2
+    waves = logits @ proj
+    label = (c[:, None] + c[None, :]) % rs.P
+
+    def acc(x: np.ndarray, mask: np.ndarray) -> float:
+        return float((x.argmax(-1) == label)[mask].mean())
+    return {"waves_train": acc(waves, train), "waves_test": acc(waves, ~train),
+            "removed_train": acc(logits - waves, train), "removed_test": acc(logits - waves, ~train)}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("out", type=Path)
@@ -95,7 +111,8 @@ def main() -> None:
         loss, dlogits, correct = rs.loss_and_dlogits(f["logits"], grid)
         if step % 10 == 0 or step == args.steps:
             curve.append([step, float(correct[grid.train].mean()), float(correct[test].mean()), loss,
-                          key_frequency_share(w["W_E"]), formula_fit(f["logits"], w["W_E"])[2]])
+                          key_frequency_share(w["W_E"]), formula_fit(f["logits"], w["W_E"])[2],
+                          *wave_ablation(f["logits"], w["W_E"], grid.train).values()])
         if step == args.steps:
             break
         rs.adamw(w, rs.backward(w, f, dlogits), m, v, step, args.lr, args.wd)
@@ -106,7 +123,8 @@ def main() -> None:
              **{f"final_{k}": x for k, x in w.items()})
     first99 = next((int(c[0]) for c in curve if c[2] >= 0.99), None)
     print(json.dumps({"steps": args.steps, "seconds": round(secs, 1), "first_test99": first99,
-                      "final": dict(zip(["step", "train", "test", "loss", "key_share", "formula_r2"], curve[-1]))}))
+                      "final": dict(zip(["step", "train", "test", "loss", "key_share", "formula_r2", "waves_train", "waves_test",
+                                              "removed_train", "removed_test"], curve[-1]))}))
 
 
 if __name__ == "__main__":

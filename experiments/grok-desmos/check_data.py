@@ -1,7 +1,7 @@
 """Reference numbers for checking the Desmos training graph: loss, the right/wrong grid and
 every gradient at the initial weights, the weights after k AdamW steps, flattened in the
-same row-major order as the graph's state lists, and the trig-formula fit (key frequencies,
-alphas, R^2) at the initial weights and after each k.
+same row-major order as the graph's state lists, the trig-formula fit (key frequencies,
+alphas, R^2) and the wave ablation accuracies at the initial weights and after each k.
 
 Usage: python3 check_data.py runs/seed0.npz OUT.json [--steps 1 5 20]
 """
@@ -13,7 +13,7 @@ import numpy as np
 
 import ref_step as rs
 from gen_grok import TENSORS
-from run_ref import formula_fit
+from run_ref import formula_fit, wave_ablation
 
 
 def main() -> None:
@@ -40,6 +40,7 @@ def main() -> None:
         "grads0": {TENSORS[k][0]: g0[k].reshape(-1).tolist() for k in TENSORS},
         "weights": {},
         "formula": {"0": dict(zip(("ks", "alphas", "r2"), formula_fit(f0["logits"], w["W_E"])))},
+        "ablation": {"0": wave_ablation(f0["logits"], w["W_E"], grid.train)},
     }
     targets = set(args.steps)
     for step in range(max(targets)):
@@ -48,8 +49,9 @@ def main() -> None:
         rs.adamw(w, rs.backward(w, f, dl), m, v, step, args.lr, args.wd)
         if step + 1 in targets:
             out["weights"][str(step + 1)] = {TENSORS[k][0]: w[k].reshape(-1).tolist() for k in TENSORS}
-            fit = formula_fit(rs.forward(w, grid)["logits"], w["W_E"])
-            out["formula"][str(step + 1)] = dict(zip(("ks", "alphas", "r2"), fit))
+            logits = rs.forward(w, grid)["logits"]
+            out["formula"][str(step + 1)] = dict(zip(("ks", "alphas", "r2"), formula_fit(logits, w["W_E"])))
+            out["ablation"][str(step + 1)] = wave_ablation(logits, w["W_E"], grid.train)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(out))
     print(f"wrote {args.out}: loss0 {loss0:.6f}, init test-grid correct {int(correct0.sum())}/961, steps {sorted(targets)}")

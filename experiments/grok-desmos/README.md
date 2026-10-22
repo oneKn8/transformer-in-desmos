@@ -28,14 +28,28 @@ So the formula's share of the network tripled during the plateau while accuracy 
 
 Against numpy, R^2 agrees to 6e-16 at step 90, 2e-12 at 270, 3e-8 at 390 and 5e-5 at 590 (rounding growth again), and held-out accuracy is identical at 61 of the 65 recorded steps up to 640; at the other four (500, 510, 530, 580) the runs disagree on exactly one of the 481 held-out pairs. A second instability at step 640 hits both runs identically (train accuracy 60%, held-out 51.8%); after it the two runs separate at the 1e-2 level. Past grokking the formula's share drifts down (0.88 at step 630, 0.71 at 800 in both) while held-out accuracy stays at 96 to 99%: the three-frequency cosine is the core of the solution, not all of it.
 
+## Remove the waves and it cannot add (2026-10-22)
+
+Three buttons above the grid choose what the grid scores: the full network, the waves only, or the logits with the waves removed. "The waves" are each pair's 31 logits projected onto the cosine and sine of the three key frequencies over c; the projection is (2/31) M_f^T M_f, M_f being the six rows of cosines and sines the formula fit already uses (they are orthogonal, each with squared norm 31/2). The line under the grid gives that view's accuracy; the readout and history above stay on the full network. This is the excluded / restricted check of Nanda et al. (2023), turned into a button you can press while the network trains.
+
+Predictions written down before the in-graph run, and the result:
+
+| | Prediction | Desmos | numpy |
+|---|---|---|---|
+| P7 | when held-out accuracy first reaches 99%: waves only at least 99% held-out, waves removed at most 10% | step 588: waves only 99.6% (full network 99.2%); waves removed 4.6% held-out, 9.6% train | 99.4%; 4.6%, 9.6% |
+| P8 | at step 480, with the full network at 100% train, waves removed below 5% on the training pairs | step 482: 1.0% train, 0.4% held-out | identical |
+| P9 | the full-network view is the network to the bit | identical grid at initialization and every view switch | |
+
+So by grokking the three waves carry the whole computation: on their own they add better than the network does, and without them it is below chance (3.2%) even on the pairs it memorized. The memorized lookup has been absorbed into the waves; numpy shows that happening from the plateau on (with the waves removed, training accuracy falls from 25% at step 90 to 17% at 270 and 1.2% at 510). Every view matched numpy exactly at initialization; at steps 482 and 588 the waves-removed scores are identical and waves-only differs by one held-out pair (rounding drift, as above). Screenshots: `../../evidence/2026-10-22_ablation-in-desmos_*.jpg`.
+
 ## Status (2026-10-22)
 
 | Piece | State |
 |---|---|
 | `ref_step.py`: the training step in the exact structured form the graph uses | Verified. Matches torch autograd on grok.py's model: logits to 1e-12, every gradient to 1e-10 relative, parameters after 20 AdamW steps to 1e-9 (`test_ref_step.py`, 4 tests). |
-| `run_ref.py`: full training run with that step | Verified. Reproduces the grok: test accuracy 42% from step 100 to 400, 99% at step 1140, key-frequency share of the embedding 0.26 to 0.90. 1,400 steps in 21 s. Also records the formula fit (`formula_fit`: key frequencies, alphas, R^2) every 10 steps. |
-| `gen_grok.py`: the Desmos training graph (any MLP width; views: pair grid, Fourier circle and spectrum, accuracy history, the formula panel; go / stop) | VERIFIED for MLP width 32 (2026-10-22): loads in about 3 s; at initialization the right/wrong grid matches numpy on all 961 pairs and all 11 gradient tensors match to 1.3e-15 relative; after one AdamW step the weights match to 3.3e-16; after 20 real ticker steps every weight matches the numpy run to 5.8e-15. The fix that made it usable: every comprehension that reads named lists runs inside its own function with those lists passed in whole (see Design). |
-| `check_data.py`: reference loss, right/wrong grid, gradients, weights after 1, 5 and 20 steps flattened like the graph's lists, and the formula fit at each of those steps | Used for every comparison above. |
+| `run_ref.py`: full training run with that step | Verified. Reproduces the grok: test accuracy 42% from step 100 to 400, 99% at step 1140, key-frequency share of the embedding 0.26 to 0.90. 1,400 steps in 21 s. Also records the formula fit (`formula_fit`: key frequencies, alphas, R^2) and the wave ablation (`wave_ablation`) every 10 steps. |
+| `gen_grok.py`: the Desmos training graph (any MLP width; views: pair grid with full / waves only / waves removed buttons, Fourier circle and spectrum, accuracy history, the formula panel; go / stop) | VERIFIED for MLP width 32 (2026-10-22): loads in about 3 s; at initialization the right/wrong grid matches numpy on all 961 pairs and all 11 gradient tensors match to 1.3e-15 relative; after one AdamW step the weights match to 3.3e-16; after 20 real ticker steps every weight matches the numpy run to 5.8e-15. The fix that made it usable: every comprehension that reads named lists runs inside its own function with those lists passed in whole (see Design). |
+| `check_data.py`: reference loss, right/wrong grid, gradients, weights after 1, 5 and 20 steps flattened like the graph's lists, and the formula fit and wave ablation at each of those steps | Used for every comparison above. |
 
 ## Chosen run (2026-10-22)
 

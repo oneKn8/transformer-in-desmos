@@ -30,7 +30,7 @@ def test_graph_is_well_formed(width):
     assert len(ids) == len(set(ids))
     names = [n for n in (dp.defined_name(e.get("latex") or "") for e in ex) if n]
     assert len(names) == len(set(names))
-    for needed in ("As", "Gl", "Cg", "ge", "nwe", "grid", "circ", "bgo", "rd", "Kf", "Bf", "rf", "fw", "fd"):
+    for needed in ("As", "Gl", "Cg", "ge", "nwe", "grid", "circ", "bgo", "rd", "Kf", "Bf", "rf", "fw", "fd", "Gz", "Cz", "zb2"):
         assert needed in ids
     assert "A_{s}" in state["expressions"]["ticker"]["handlerLatex"]
     hd_body = next(e["latex"] for e in ex if e["id"] == "mHd")
@@ -106,3 +106,22 @@ def test_graph_formula_block_matches_brute_force_fit(trig):
     assert abs(gr2 - r2) < 1e-12
     if trig:
         assert r2 > 0.9 and np.allclose(alphas, (5.0, 3.0, 1.5), atol=0.05)
+
+
+def test_graph_wave_projection_matches_numpy_ablation():
+    """The graph projects onto the waves with (2 / 31) M_f^T M_f; run_ref uses U U^T / (31 / 2)."""
+    emb = RNG.standard_normal((32, 32))
+    ks = run_ref.top_frequencies(emb)
+    tok = np.arange(31)
+    m = np.array([np.cos(2 * np.pi * ks[(r - 1) % 3] * tok / 31 - (np.pi / 2 if r > 3 else 0)) for r in range(1, 7)])
+    proj = 2 / 31 * m.T @ m
+    assert np.allclose(proj @ proj, proj, atol=1e-12)          # a projection
+    a, b, c = np.meshgrid(tok, tok, tok, indexing="ij")
+    waves = sum(al * np.cos(2 * np.pi * k * (a + b - c) / 31) for al, k in zip((3.0, 2.0, 1.0), ks))
+    noise = RNG.standard_normal((31, 31, 31))
+    assert np.allclose(waves @ proj, waves, atol=1e-12)        # waves pass through
+    assert np.allclose((noise - noise @ proj) @ proj, 0, atol=1e-12)
+    train = RNG.random((31, 31)) < 0.5
+    got = run_ref.wave_ablation(waves + 0.01 * noise, emb, train)
+    assert got["waves_train"] == got["waves_test"] == 1.0      # the waves alone add correctly
+    assert got["removed_test"] < 0.2                           # what is left is near chance (1/31)

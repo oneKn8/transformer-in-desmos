@@ -268,9 +268,10 @@ def views() -> list:
         hid("ae", r"a_{e}=\frac{\operatorname{total}\left(c_{f}\left(1-t_{f}\right)\right)}{961-n_{tr}}"),
         hid("qx", r"q_{x}=\left[b" + ab + r"\right]"),
         hid("qy", r"q_{y}=\left[-a" + ab + r"\right]"),
-        hid("qc", r"q_{c}=\operatorname{rgb}\left(\left\{t_{f}=1:\left\{c_{f}=1:190,110\right\},\left\{c_{f}=1:46,235\right\}\right\},"
-                  r"\left\{t_{f}=1:\left\{c_{f}=1:190,110\right\},\left\{c_{f}=1:160,200\right\}\right\},"
-                  r"\left\{t_{f}=1:\left\{c_{f}=1:190,110\right\},\left\{c_{f}=1:67,200\right\}\right\}\right)"),
+        # cell colours follow the grid view chosen with the buttons (c_z), the readout and history the full network (c_f)
+        hid("qc", r"q_{c}=\operatorname{rgb}\left(\left\{t_{f}=1:\left\{c_{z}=1:190,110\right\},\left\{c_{z}=1:46,235\right\}\right\},"
+                  r"\left\{t_{f}=1:\left\{c_{z}=1:190,110\right\},\left\{c_{z}=1:160,200\right\}\right\},"
+                  r"\left\{t_{f}=1:\left\{c_{z}=1:190,110\right\},\left\{c_{z}=1:67,200\right\}\right\}\right)"),
         expr("grid", r"\operatorname{polygon}\left(\left(q_{x}-1,q_{y}\right),\left(q_{x},q_{y}\right),\left(q_{x},q_{y}+1\right),\left(q_{x}-1,q_{y}+1\right)\right)",
              colorLatex="q_{c}", fillOpacity="1", lines=False,
              clickableInfo={"enabled": True, "latex": r"i_{a}\to-q_{y}\left[\operatorname{index}\right],i_{b}\to q_{x}\left[\operatorname{index}\right]"}),
@@ -374,6 +375,41 @@ def formula(pair: tuple[int, int]) -> list:
     ]
 
 
+ABLATION_VIEWS = ("full network", "waves only", "waves removed")
+
+
+def ablation() -> list:
+    """Keep only, or remove, the key-frequency waves in every pair's 31 logits and colour the
+    grid by what is left (run_ref.wave_ablation). M_f's six rows are orthogonal with squared
+    norm 31 / 2, so (2 / 31) M_f^T M_f projects a row of logits onto the waves."""
+    ab = r"\operatorname{for}b=\left[1...31\right],a=\left[1...31\right]"
+
+    def mode(n: int) -> str:
+        return f"\\left\\{{z_{{m}}={n}:1,0\\right\\}}"
+    ex = [
+        hid("Pw", r"P_{w}=\frac{2}{31}M_{f}^{T}M_{f}"),
+        hid("Gw", r"G_{w}=G_{l}P_{w}"),
+        expr("zm", r"z_{m}=0"),
+        # view 0: G_l, 1: G_w, 2: G_l - G_w (0 G + G and G + 0 G are exact, so view 0 is G_l to the bit)
+        hid("Gz", f"G_{{z}}=\\left(1-{mode(1)}\\right)G_{{l}}+\\left({mode(1)}-{mode(2)}\\right)G_{{w}}"),
+        hid("Mz", r"M_{z}=\left[m_{f}\left(G_{z}\left[a\right]\right)" + OVER_A + r"\right]"),
+        hid("Cz", r"C_{z}=\left\{G_{z}\left[a\right]\left[b;\operatorname{mod}\left(a+b-2,31\right)+1\right]=M_{z}\left[a\right]\left[b;1\right]:1,0\right\}"
+                  r"\operatorname{for}a=\left[1...31\right];b=\left[1...31\right]"),
+        hid("cz", r"c_{z}=\left[C_{z}\left[a;b\right]" + ab + r"\right]"),
+        hid("jr", r"j_{r}=\frac{\operatorname{total}\left(c_{z}t_{f}\right)}{n_{tr}}"),
+        hid("je", r"j_{e}=\frac{\operatorname{total}\left(c_{z}\left(1-t_{f}\right)\right)}{961-n_{tr}}"),
+        hid("ov", r"o_{v}=\operatorname{round}\left(j_{r},3\right)"), hid("ow", r"o_{w}=\operatorname{round}\left(j_{e},3\right)"),
+        expr("zrd", f"\\left({GRID_X},{GRID_Y}-32.6\\right)", color="#000000", pointSize="0", pointOpacity="1", showLabel=True,
+             labelOrientation="right", label="this grid: train ${o_{v}}   held-out ${o_{w}}"),
+    ]
+    for n, (name, x) in enumerate(zip(ABLATION_VIEWS, (0, 8.5, 16))):
+        ex.append(expr(f"zb{n}", f"\\left({GRID_X + x},{GRID_Y}+1.2\\right)", pointSize="0", pointOpacity="1",
+                       colorLatex=f"\\left\\{{z_{{m}}={n}:\\operatorname{{rgb}}\\left(224,123,26\\right),\\operatorname{{rgb}}\\left(130,130,130\\right)\\right\\}}",
+                       label=name, showLabel=True, labelOrientation="right",
+                       clickableInfo={"enabled": True, "latex": f"z_{{m}}\\to{n}"}))
+    return ex
+
+
 def build(npz: dict, lr: float, wd: float) -> dict:
     init = {k[len("init_"):]: npz[k] for k in npz if k.startswith("init_")}
     width = int(init["W_in"].shape[1]) if "W_in" in init else 0
@@ -392,7 +428,7 @@ def build(npz: dict, lr: float, wd: float) -> dict:
         "A one-layer transformer learning (a + b) mod 31 inside Desmos: forward pass, hand-written "
         "backward pass and AdamW, one step per tick.")}]
     ex += state_lists(init) + helpers() + constants(train) + params() + forward() + backward()
-    ex += flat_grads() + optimizer(lr, wd) + views() + formula(first_held_out(train))
+    ex += flat_grads() + optimizer(lr, wd) + views() + formula(first_held_out(train)) + ablation()
     for e in ex:
         if "latex" in e:
             e["latex"] = e["latex"].replace("@K@", str(width // 32)).replace("@W@", str(width))
