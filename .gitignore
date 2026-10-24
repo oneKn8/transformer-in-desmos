@@ -1,2 +1,10 @@
 out/
 __pycache__/
+*.pyc
+.venv/
+# working notes stay local
+WORK_QUEUE.md
+BRIEF.md
+NOTES.md
+research/
+*.mp4

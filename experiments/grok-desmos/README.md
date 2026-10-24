@@ -18,7 +18,7 @@ The graph also reads the algorithm back out of the network while training it. Ev
 
 to all 961 pairs, with k_1..k_3 the three strongest Fourier frequencies of the number-token embeddings, and reports R^2: the share of the logits (centered per pair) that this one formula explains. The panel under the grid draws one pair's 31 logits as dots over the fitted wave; click any grid cell to switch pairs. The cosine of a + b - c splits into products of cosines and sines of a, b and c, so each alpha needs one 6x31 by 31x31 by 31x6 product per block of pairs, cheap next to the training step. Nanda et al. (2023) measure the same structure offline (restricted and excluded loss on the key frequencies); what is new here is the formula fitted and plotted inside the graph that is training the network, every step.
 
-Predictions written down before the in-graph run (numpy expectations in `../../WORK_QUEUE.md`), and the result:
+Predictions written down before the in-graph run (in the project's working log, with the numpy expectations), and the result:
 
 | | Prediction | Desmos | numpy |
 |---|---|---|---|

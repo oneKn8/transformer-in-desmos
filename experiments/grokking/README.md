@@ -241,8 +241,8 @@ Other configs (compute per step, matmul-equivalents): attention p31 frac 0.6 m12
 Sensitivity:
 - If native matrix adds cost as much as a matmul instead of 1/32 of one, the recommended
   step grows from 1.47 s to about 2.33 s (+58%).
-- If elementwise work can run as native list arithmetic instead of comprehensions (the biped
-  session found list math nearly free), the step drops by up to 25%.
+- If elementwise work can run as native list arithmetic instead of comprehensions (a companion
+  Desmos project found list math nearly free), the step drops by up to 25%.
 - Partial tiles (p = 31 rows, 4-column head tables) are charged as full tiles, which is
   conservative.
 - The ticker will run at about 0.6 ticks/s, not 2 to 6: per-step compute exceeds 1 s. So
@@ -261,7 +261,7 @@ Sensitivity:
    2135 and the other had not by 3000. Desmos will sum in a different order, so treat step
    counts as a distribution over seeds, not exact predictions. To make the run
    reproducible, export the initial weights and data split from Python, then compare the
-   first ~50 Desmos steps to numpy as the biped session did.
+   first ~50 Desmos steps to numpy.
 3. **Seed choice matters for the visual.** Only 1 of 4 seeds at the recommended setting has
    the long plateau. Load seed 0's init rather than drawing fresh random weights in Desmos.
 4. **Native add cost is unmeasured** (see sensitivity above).

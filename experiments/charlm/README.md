@@ -164,7 +164,7 @@ KV-cached (one new row per token, window full) for the same model is 106 padded 
 **KV caching: recommend full recompute for phase 1**, for three reasons:
 1. With a 32-row window, a 1-row matmul uses as many 32x32 block calls as a 32-row one. So under the padded accounting the cache saves only the elementwise softmax work (243 to 198 ms). Under the mac accounting it saves 3.7x (241 to 65 ms). The single most decision-relevant next measurement in Desmos is the time of a 1x32 @ 32x32 product against a 32x32 @ 32x32 one.
 2. With learned absolute positions, a cache is valid only while the text fits in the window (the first 32 tokens). After that every token shifts every position, so each step must recompute anyway. ALiBi would fix this but cost 0.30 bpc here.
-3. The cache must be written back each token (2 x layers x T x d = 8,192 numbers here). `../../../NOTES.md` measured large action-written lists as expensive (about 150 ms more for a 192-point list), so the real KV cost is likely higher than the estimate.
+3. The cache must be written back each token (2 x layers x T x d = 8,192 numbers here). Earlier measurements in this project found large action-written lists expensive (about 150 ms more for a 192-point list; see also [`../ticker-bench/`](../ticker-bench/)), so the real KV cost is likely higher than the estimate.
 
 Right-padding is exact: under the causal mask, rows before the padding do not depend on it (verified to 6e-15). So Desmos can always evaluate a full 32-row window with the prompt left-aligned and padding after it, and read row `len-1`. After 32 tokens the window slides (positions 0..31 always hold the last 32 chars), which matches how training sampled random windows.
 
